@@ -6,8 +6,11 @@ class Aircraft {
   final double wingSpanM;
   final int motorCount;
   final double motorPowerW;
+  final double propellerDiameterInch;
   final double batteryCapacityMah;
   final double batteryVoltageV;
+  final String batteryType;
+  final int batteryCellCount;
 
   const Aircraft({
     required this.name,
@@ -17,7 +20,10 @@ class Aircraft {
     required this.wingSpanM,
     required this.motorCount,
     required this.motorPowerW,
+    required this.propellerDiameterInch,
     required this.batteryCapacityMah,
     required this.batteryVoltageV,
+    required this.batteryType,
+    required this.batteryCellCount,
   });
 }

@@ -4,6 +4,8 @@ import 'analysis_result_page.dart';
 import 'models/aircraft.dart';
 import 'models/environment.dart';
 import 'services/analysis_service.dart';
+import 'widgets/analysis_section.dart';
+import 'services/battery_validation_service.dart';
 
 class NewAnalysisPage extends StatefulWidget {
   const NewAnalysisPage({super.key});
@@ -20,14 +22,21 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
   final _wingAreaController = TextEditingController(text: '0.45');
   final _wingSpanController = TextEditingController(text: '1.2');
   final _motorPowerController = TextEditingController(text: '850');
+  final _motorCountController = TextEditingController(text: '4');
+  final _propellerDiameterController = TextEditingController(text: '10');
   final _batteryCapacityController = TextEditingController(text: '5200');
   final _batteryVoltageController = TextEditingController(text: '14.8');
+  final _batteryCellController = TextEditingController(text: '4');
+
+  String _batteryType = 'LiPo';
   final _windSpeedController = TextEditingController(text: '12');
 
   String _selectedAircraftType = 'Drone';
 
   @override
   void dispose() {
+    _motorCountController.dispose();
+    _propellerDiameterController.dispose();
     _nameController.dispose();
     _weightController.dispose();
     _wingAreaController.dispose();
@@ -35,6 +44,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     _motorPowerController.dispose();
     _batteryCapacityController.dispose();
     _batteryVoltageController.dispose();
+    _batteryCellController.dispose();
     _windSpeedController.dispose();
 
     super.dispose();
@@ -48,6 +58,25 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    final batteryValidator = BatteryValidationService();
+
+    final isBatteryVoltageValid = batteryValidator.isVoltageValid(
+      batteryType: _batteryType,
+      cellCount: _toDouble(_batteryCellController).toInt(),
+      enteredVoltage: _toDouble(_batteryVoltageController),
+    );
+
+    if (!isBatteryVoltageValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Batarya voltajı seçilen batarya tipi ve hücre sayısı ile uyumlu görünmüyor.',
+          ),
+        ),
+      );
+
+      return;
+    }
 
     final aircraft = Aircraft(
       name: _nameController.text,
@@ -55,10 +84,13 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
       weightKg: _toDouble(_weightController),
       wingAreaM2: _toDouble(_wingAreaController),
       wingSpanM: _toDouble(_wingSpanController),
-      motorCount: 4,
+      motorCount: _toDouble(_motorCountController).toInt(),
       motorPowerW: _toDouble(_motorPowerController),
+      propellerDiameterInch: _toDouble(_propellerDiameterController),
       batteryCapacityMah: _toDouble(_batteryCapacityController),
       batteryVoltageV: _toDouble(_batteryVoltageController),
+      batteryType: _batteryType,
+      batteryCellCount: _toDouble(_batteryCellController).toInt(),
     );
 
     final environment = Environment(
@@ -74,9 +106,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => AnalysisResultPage(result: result),
-      ),
+      MaterialPageRoute(builder: (_) => AnalysisResultPage(result: result)),
     );
   }
 
@@ -124,34 +154,140 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                       ),
                       const SizedBox(height: 28),
 
-                      DropdownButtonFormField<String>(
-                         initialValue: _selectedAircraftType,
-                        decoration: const InputDecoration(
-                          labelText: 'Araç Tipi',
-                          border: OutlineInputBorder(),
+                      AnalysisSection(
+                        title: 'Genel Bilgiler',
+                        child: Column(
+                          children: [
+                            DropdownButtonFormField<String>(
+                              initialValue: _selectedAircraftType,
+                              decoration: const InputDecoration(
+                                labelText: 'Araç Tipi',
+                                border: OutlineInputBorder(),
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'Drone',
+                                  child: Text('Drone'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Sabit Kanat',
+                                  child: Text('Sabit Kanat'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'VTOL',
+                                  child: Text('VTOL'),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedAircraftType = value ?? 'Drone';
+                                });
+                              },
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            _buildTextField('Araç Adı', _nameController),
+                          ],
                         ),
-                        items: const [
-                          DropdownMenuItem(value: 'Drone', child: Text('Drone')),
-                          DropdownMenuItem(value: 'Sabit Kanat', child: Text('Sabit Kanat')),
-                          DropdownMenuItem(value: 'VTOL', child: Text('VTOL')),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedAircraftType = value ?? 'Drone';
-                          });
-                        },
                       ),
 
-                      const SizedBox(height: 18),
+                      AnalysisSection(
+                        title: 'Aerodinamik',
+                        child: Column(
+                          children: [
+                            _buildTextField('Ağırlık (kg)', _weightController),
+                            _buildTextField(
+                              'Kanat Alanı (m²)',
+                              _wingAreaController,
+                            ),
+                            _buildTextField(
+                              'Kanat Açıklığı (m)',
+                              _wingSpanController,
+                            ),
+                          ],
+                        ),
+                      ),
 
-                      _buildTextField('Araç Adı', _nameController),
-                      _buildTextField('Ağırlık (kg)', _weightController),
-                      _buildTextField('Kanat Alanı (m²)', _wingAreaController),
-                      _buildTextField('Kanat Açıklığı (m)', _wingSpanController),
-                      _buildTextField('Motor Gücü (W)', _motorPowerController),
-                      _buildTextField('Batarya Kapasitesi (mAh)', _batteryCapacityController),
-                      _buildTextField('Batarya Voltajı (V)', _batteryVoltageController),
-                      _buildTextField('Rüzgâr Hızı (km/h)', _windSpeedController),
+                      AnalysisSection(
+                        title: 'Motor',
+                        child: Column(
+                          children: [
+                            _buildTextField(
+                              'Motor Gücü (W)',
+                              _motorPowerController,
+                            ),
+                            _buildTextField(
+                              'Motor Sayısı',
+                              _motorCountController,
+                            ),
+                            _buildTextField(
+                              'Pervane Çapı (inch)',
+                              _propellerDiameterController,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      AnalysisSection(
+                        title: 'Batarya',
+                        child: Column(
+                          children: [
+                            DropdownButtonFormField<String>(
+                              initialValue: _batteryType,
+                              decoration: const InputDecoration(
+                                labelText: 'Batarya Tipi',
+                                border: OutlineInputBorder(),
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'LiPo',
+                                  child: Text('LiPo'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Li-Ion',
+                                  child: Text('Li-Ion'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'LiHV',
+                                  child: Text('LiHV'),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _batteryType = value ?? 'LiPo';
+                                });
+                              },
+                            ),
+
+                            const SizedBox(height: 18),
+                            _buildTextField(
+                              'Batarya Kapasitesi (mAh)',
+                              _batteryCapacityController,
+                            ),
+                            _buildTextField(
+                              'Batarya Voltajı (V)',
+                              _batteryVoltageController,
+                            ),
+                            _buildTextField(
+                              'Hücre Sayısı (S)',
+                              _batteryCellController,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      AnalysisSection(
+                        title: 'Çevre',
+                        child: Column(
+                          children: [
+                            _buildTextField(
+                              'Rüzgâr Hızı (km/h)',
+                              _windSpeedController,
+                            ),
+                          ],
+                        ),
+                      ),
 
                       const SizedBox(height: 12),
 
@@ -178,10 +314,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     );
   }
 
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller,
-  ) {
+  Widget _buildTextField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: TextFormField(

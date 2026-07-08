@@ -1,17 +1,32 @@
-# aerolab
+# ✈️ AeroLab
 
-A new Flutter project.
+> Professional Aircraft Performance Analysis Platform
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## About
 
-A few resources to get you started if this is your first Flutter project:
+AeroLab is a professional engineering software project developed to analyze
+the aerodynamic performance of drones and fixed-wing aircraft.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+The goal of the project is to provide engineers, students and researchers
+with an easy-to-use platform for aircraft performance calculations.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The software is being developed with Flutter using a modular and scalable
+software architecture.
+
+---
+
+## Current Version
+
+**v0.1.0 - Development**
+
+---
+
+## Developer
+
+**Yunus Emre Ceylan**
+
+Computer Programming Student
+
+Istanbul Gelisim University
