@@ -4,10 +4,7 @@ import 'models/analysis_result.dart';
 class AnalysisResultPage extends StatelessWidget {
   final AnalysisResult result;
 
-  const AnalysisResultPage({
-    super.key,
-    required this.result,
-  });
+  const AnalysisResultPage({super.key, required this.result});
 
   @override
   Widget build(BuildContext context) {
@@ -55,10 +52,7 @@ class AnalysisResultPage extends StatelessWidget {
         SizedBox(height: 8),
         Text(
           'Aerodinamik performans ve temel güvenlik değerlendirmesi',
-          style: TextStyle(
-            fontSize: 15,
-            color: Color(0xFF627D98),
-          ),
+          style: TextStyle(fontSize: 15, color: Color(0xFF627D98)),
         ),
       ],
     );
@@ -81,17 +75,11 @@ class AnalysisResultPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: statusColor.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: statusColor.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.shield,
-            size: 48,
-            color: statusColor,
-          ),
+          Icon(Icons.shield, size: 48, color: statusColor),
           const SizedBox(width: 20),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,10 +95,7 @@ class AnalysisResultPage extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 'Risk Skoru: ${result.riskScore}/100',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF486581),
-                ),
+                style: const TextStyle(fontSize: 16, color: Color(0xFF486581)),
               ),
             ],
           ),
@@ -123,10 +108,28 @@ class AnalysisResultPage extends StatelessWidget {
     final items = [
       _ResultItem('Lift Force', '${result.liftN.toStringAsFixed(2)} N'),
       _ResultItem('Drag Force', '${result.dragN.toStringAsFixed(2)} N'),
-      _ResultItem('Wing Loading', '${result.wingLoading.toStringAsFixed(2)} kg/m²'),
+      _ResultItem(
+        'Wing Loading',
+        '${result.wingLoading.toStringAsFixed(2)} kg/m²',
+      ),
       _ResultItem('Stall Speed', '${result.stallSpeed.toStringAsFixed(2)} m/s'),
       _ResultItem('Thrust / Weight', result.thrustToWeight.toStringAsFixed(2)),
-      _ResultItem('Flight Time', '${result.estimatedFlightTime.toStringAsFixed(1)} dk'),
+      _ResultItem(
+        'Flight Time',
+        '${result.estimatedFlightTime.toStringAsFixed(1)} dk',
+      ),
+      _ResultItem('Aspect Ratio', result.aspectRatio.toStringAsFixed(2)),
+      _ResultItem(
+        'Power / Weight',
+        '${result.powerToWeight.toStringAsFixed(1)} W/kg',
+      ),
+      _ResultItem(
+        'Estimated Thrust',
+        '${result.estimatedThrustN.toStringAsFixed(2)} N',
+      ),
+      _ResultItem('Wing Loading Status', result.wingLoadingStatus),
+      _ResultItem('Power Status', result.powerToWeightStatus),
+      _ResultItem('Thrust Status', result.thrustToWeightStatus),
     ];
 
     return GridView.builder(
@@ -155,10 +158,7 @@ class AnalysisResultPage extends StatelessWidget {
             children: [
               Text(
                 item.title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF627D98),
-                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF627D98)),
               ),
               const SizedBox(height: 10),
               Text(

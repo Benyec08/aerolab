@@ -30,8 +30,16 @@ import 'drag_service.dart';
 import 'stall_service.dart';
 import 'flight_time_service.dart';
 import 'risk_service.dart';
+import 'aspect_ratio_service.dart';
+import 'wing_loading_service.dart';
+import 'power_to_weight_service.dart';
+import 'thrust_service.dart';
 
 class AnalysisService {
+  final _aspectRatioService = AspectRatioService();
+  final _wingLoadingService = WingLoadingService();
+  final _powerToWeightService = PowerToWeightService();
+  final _thrustService = ThrustService();
   final AirDensityService airDensityService = AirDensityService();
   final LiftService liftService = LiftService();
   final DragService dragService = DragService();
@@ -39,10 +47,7 @@ class AnalysisService {
   final FlightTimeService flightTimeService = FlightTimeService();
   final RiskService riskService = RiskService();
 
-  AnalysisResult analyze(
-    Aircraft aircraft,
-    Environment environment,
-  ) {
+  AnalysisResult analyze(Aircraft aircraft, Environment environment) {
     const double flightSpeedMs = 15;
     const double liftCoefficient = 1.1;
     const double dragCoefficient = 0.045;
@@ -67,7 +72,38 @@ class AnalysisService {
       dragCoefficient: dragCoefficient,
     );
 
-    final double wingLoading = aircraft.weightKg / aircraft.wingAreaM2;
+    final double aspectRatio = _aspectRatioService.calculate(
+      wingSpanM: aircraft.wingSpanM,
+      wingAreaM2: aircraft.wingAreaM2,
+    );
+
+    final double wingLoading = _wingLoadingService.calculate(
+      weightKg: aircraft.weightKg,
+      wingAreaM2: aircraft.wingAreaM2,
+    );
+
+    final String wingLoadingStatus = _wingLoadingService.evaluate(wingLoading);
+
+    final double powerToWeight = _powerToWeightService.calculate(
+      motorPowerW: aircraft.motorPowerW,
+      weightKg: aircraft.weightKg,
+    );
+
+    final String powerToWeightStatus = _powerToWeightService.evaluate(
+      powerToWeight,
+    );
+
+    final double estimatedThrust = _thrustService.calculate(
+      motorPowerW: aircraft.motorPowerW,
+      motorCount: aircraft.motorCount,
+    );
+
+    final double thrustToWeight = _thrustService.thrustToWeight(
+      thrustN: estimatedThrust,
+      weightKg: aircraft.weightKg,
+    );
+
+    final String thrustToWeightStatus = _thrustService.evaluate(thrustToWeight);
 
     final double stallSpeed = stallService.calculate(
       weightKg: aircraft.weightKg,
@@ -75,9 +111,6 @@ class AnalysisService {
       airDensity: airDensity,
       clMax: clMax,
     );
-
-    final double thrustToWeight =
-        aircraft.motorPowerW / (aircraft.weightKg * 100);
 
     final double estimatedFlightTime = flightTimeService.calculateMinutes(
       batteryCapacityMah: aircraft.batteryCapacityMah,
@@ -109,6 +142,12 @@ class AnalysisService {
       stallSpeed: stallSpeed,
       thrustToWeight: thrustToWeight,
       estimatedFlightTime: estimatedFlightTime,
+      aspectRatio: aspectRatio,
+      powerToWeight: powerToWeight,
+      estimatedThrustN: estimatedThrust,
+      wingLoadingStatus: wingLoadingStatus,
+      powerToWeightStatus: powerToWeightStatus,
+      thrustToWeightStatus: thrustToWeightStatus,
       riskScore: riskScore,
       status: status,
       recommendation: recommendation,
