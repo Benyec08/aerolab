@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'models/analysis_result.dart';
+import 'widgets/result_card.dart';
+import 'widgets/result_section.dart';
 
 class AnalysisResultPage extends StatelessWidget {
   final AnalysisResult result;
@@ -16,7 +19,7 @@ class AnalysisResultPage extends StatelessWidget {
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
+          constraints: const BoxConstraints(maxWidth: 1100),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -25,9 +28,10 @@ class AnalysisResultPage extends StatelessWidget {
                 _buildHeader(),
                 const SizedBox(height: 24),
                 _buildRiskCard(),
-                const SizedBox(height: 24),
-                _buildResultGrid(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
+                _buildAerodynamicSection(),
+                _buildPropulsionSection(),
+                _buildEnergySection(),
                 _buildRecommendationCard(),
               ],
             ),
@@ -51,7 +55,7 @@ class AnalysisResultPage extends StatelessWidget {
         ),
         SizedBox(height: 8),
         Text(
-          'Aerodinamik performans ve temel güvenlik değerlendirmesi',
+          'Aerodinamik performans, tahrik sistemi, enerji ve güvenlik değerlendirmesi',
           style: TextStyle(fontSize: 15, color: Color(0xFF627D98)),
         ),
       ],
@@ -59,15 +63,7 @@ class AnalysisResultPage extends StatelessWidget {
   }
 
   Widget _buildRiskCard() {
-    Color statusColor;
-
-    if (result.status == 'Güvenli') {
-      statusColor = Colors.green;
-    } else if (result.status == 'Dikkat') {
-      statusColor = Colors.orange;
-    } else {
-      statusColor = Colors.red;
-    }
+    final Color statusColor = _statusColor(result.status);
 
     return Container(
       width: double.infinity,
@@ -94,7 +90,7 @@ class AnalysisResultPage extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Risk Skoru: ${result.riskScore}/100',
+                'Engineering Score: ${result.riskScore}/100',
                 style: const TextStyle(fontSize: 16, color: Color(0xFF486581)),
               ),
             ],
@@ -104,75 +100,72 @@ class AnalysisResultPage extends StatelessWidget {
     );
   }
 
-  Widget _buildResultGrid() {
-    final items = [
-      _ResultItem('Lift Force', '${result.liftN.toStringAsFixed(2)} N'),
-      _ResultItem('Drag Force', '${result.dragN.toStringAsFixed(2)} N'),
-      _ResultItem(
-        'Wing Loading',
-        '${result.wingLoading.toStringAsFixed(2)} kg/m²',
-      ),
-      _ResultItem('Stall Speed', '${result.stallSpeed.toStringAsFixed(2)} m/s'),
-      _ResultItem('Thrust / Weight', result.thrustToWeight.toStringAsFixed(2)),
-      _ResultItem(
-        'Flight Time',
-        '${result.estimatedFlightTime.toStringAsFixed(1)} dk',
-      ),
-      _ResultItem('Aspect Ratio', result.aspectRatio.toStringAsFixed(2)),
-      _ResultItem(
-        'Power / Weight',
-        '${result.powerToWeight.toStringAsFixed(1)} W/kg',
-      ),
-      _ResultItem(
-        'Estimated Thrust',
-        '${result.estimatedThrustN.toStringAsFixed(2)} N',
-      ),
-      _ResultItem('Wing Loading Status', result.wingLoadingStatus),
-      _ResultItem('Power Status', result.powerToWeightStatus),
-      _ResultItem('Thrust Status', result.thrustToWeightStatus),
-    ];
+  Widget _buildAerodynamicSection() {
+    return ResultSection(
+      title: 'Aerodynamic Performance',
+      icon: Icons.air,
+      child: _buildGrid([
+        ResultCard(
+          title: 'Lift Force',
+          value: '${result.liftN.toStringAsFixed(2)} N',
+        ),
+        ResultCard(
+          title: 'Drag Force',
+          value: '${result.dragN.toStringAsFixed(2)} N',
+        ),
+        ResultCard(
+          title: 'Aspect Ratio',
+          value: result.aspectRatio.toStringAsFixed(2),
+        ),
+        ResultCard(
+          title: 'Wing Loading',
+          value: '${result.wingLoading.toStringAsFixed(2)} kg/m²',
+        ),
+        ResultCard(
+          title: 'Wing Loading Status',
+          value: result.wingLoadingStatus,
+        ),
+        ResultCard(
+          title: 'Stall Speed',
+          value: '${result.stallSpeed.toStringAsFixed(2)} m/s',
+        ),
+      ]),
+    );
+  }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 300,
-        mainAxisSpacing: 18,
-        crossAxisSpacing: 18,
-        childAspectRatio: 1.8,
-      ),
-      itemBuilder: (context, index) {
-        final item = items[index];
+  Widget _buildPropulsionSection() {
+    return ResultSection(
+      title: 'Propulsion System',
+      icon: Icons.settings,
+      child: _buildGrid([
+        ResultCard(
+          title: 'Estimated Thrust',
+          value: '${result.estimatedThrustN.toStringAsFixed(2)} N',
+        ),
+        ResultCard(
+          title: 'Thrust / Weight',
+          value: result.thrustToWeight.toStringAsFixed(2),
+        ),
+        ResultCard(title: 'Thrust Status', value: result.thrustToWeightStatus),
+        ResultCard(
+          title: 'Power / Weight',
+          value: '${result.powerToWeight.toStringAsFixed(1)} W/kg',
+        ),
+        ResultCard(title: 'Power Status', value: result.powerToWeightStatus),
+      ]),
+    );
+  }
 
-        return Container(
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFD9E2EC)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                item.title,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF627D98)),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                item.value,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF102A43),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+  Widget _buildEnergySection() {
+    return ResultSection(
+      title: 'Energy & Endurance',
+      icon: Icons.battery_charging_full,
+      child: _buildGrid([
+        ResultCard(
+          title: 'Estimated Flight Time',
+          value: '${result.estimatedFlightTime.toStringAsFixed(1)} dk',
+        ),
+      ]),
     );
   }
 
@@ -188,13 +181,19 @@ class AnalysisResultPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Öneri',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF102A43),
-            ),
+          const Row(
+            children: [
+              Icon(Icons.tips_and_updates, color: Color(0xFF0B3D91)),
+              SizedBox(width: 10),
+              Text(
+                'Engineering Recommendation',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF102A43),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Text(
@@ -209,11 +208,28 @@ class AnalysisResultPage extends StatelessWidget {
       ),
     );
   }
-}
 
-class _ResultItem {
-  final String title;
-  final String value;
+  Widget _buildGrid(List<Widget> children) {
+    return GridView.count(
+      crossAxisCount: 3,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 18,
+      mainAxisSpacing: 18,
+      childAspectRatio: 2.4,
+      children: children,
+    );
+  }
 
-  _ResultItem(this.title, this.value);
+  Color _statusColor(String status) {
+    if (status == 'Güvenli') {
+      return Colors.green;
+    }
+
+    if (status == 'Dikkat') {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
 }

@@ -21,7 +21,7 @@ class ResultCard extends StatelessWidget {
               style: TextStyle(color: Colors.blueGrey.shade500, fontSize: 14),
             ),
 
-            const Spacer(),
+            const SizedBox(height: 18),
 
             Text(
               value,
