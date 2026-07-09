@@ -34,6 +34,8 @@ import 'aspect_ratio_service.dart';
 import 'wing_loading_service.dart';
 import 'power_to_weight_service.dart';
 import 'thrust_service.dart';
+import 'recommendation_service.dart';
+import 'score_service.dart';
 
 class AnalysisService {
   final _aspectRatioService = AspectRatioService();
@@ -46,6 +48,8 @@ class AnalysisService {
   final StallService stallService = StallService();
   final FlightTimeService flightTimeService = FlightTimeService();
   final RiskService riskService = RiskService();
+  final _recommendationService = RecommendationService();
+  final _scoreService = ScoreService();
 
   AnalysisResult analyze(Aircraft aircraft, Environment environment) {
     const double flightSpeedMs = 15;
@@ -128,11 +132,31 @@ class AnalysisService {
 
     final String status = riskService.getStatus(riskScore);
 
-    final String recommendation = riskService.getRecommendation(
-      riskScore: riskScore,
-      windSpeedKmh: environment.windSpeedKmh,
-      flightSpeedMs: flightSpeedMs,
-      stallSpeedMs: stallSpeed,
+    final String recommendation = _recommendationService.generate(
+      wingLoading: wingLoading,
+      stallSpeed: stallSpeed,
+      powerToWeight: powerToWeight,
+      thrustToWeight: thrustToWeight,
+    );
+
+    final int aerodynamicScore = _scoreService.aerodynamicScore(
+      wingLoading: wingLoading,
+      stallSpeed: stallSpeed,
+    );
+
+    final int propulsionScore = _scoreService.propulsionScore(
+      powerToWeight: powerToWeight,
+      thrustToWeight: thrustToWeight,
+    );
+
+    final int energyScore = _scoreService.energyScore(
+      flightTimeMinutes: estimatedFlightTime,
+    );
+
+    final int overallScore = _scoreService.overallScore(
+      aerodynamicScore: aerodynamicScore,
+      propulsionScore: propulsionScore,
+      energyScore: energyScore,
     );
 
     return AnalysisResult(
@@ -151,6 +175,10 @@ class AnalysisService {
       riskScore: riskScore,
       status: status,
       recommendation: recommendation,
+      aerodynamicScore: aerodynamicScore,
+      propulsionScore: propulsionScore,
+      energyScore: energyScore,
+      overallScore: overallScore,
     );
   }
 }

@@ -29,6 +29,7 @@ class AnalysisResultPage extends StatelessWidget {
                 const SizedBox(height: 24),
                 _buildRiskCard(),
                 const SizedBox(height: 28),
+                _buildScoreSection(),
                 _buildAerodynamicSection(),
                 _buildPropulsionSection(),
                 _buildEnergySection(),
@@ -75,8 +76,8 @@ class AnalysisResultPage extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.shield, size: 48, color: statusColor),
-          const SizedBox(width: 20),
+          Icon(Icons.shield, size: 56, color: statusColor),
+          const SizedBox(width: 24),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -88,15 +89,53 @@ class AnalysisResultPage extends StatelessWidget {
                   color: statusColor,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
+              const Text(
+                'Overall Engineering Score',
+                style: TextStyle(fontSize: 15, color: Color(0xFF486581)),
+              ),
+              const SizedBox(height: 8),
               Text(
-                'Engineering Score: ${result.riskScore}/100',
-                style: const TextStyle(fontSize: 16, color: Color(0xFF486581)),
+                '${result.overallScore}/100',
+                style: const TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF102A43),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _buildStars(result.overallScore),
+                style: const TextStyle(fontSize: 22, color: Colors.amber),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildScoreSection() {
+    return ResultSection(
+      title: 'Performance Score',
+      icon: Icons.query_stats,
+      child: _buildGrid([
+        ResultCard(
+          title: 'Aerodynamic Score',
+          value: '${result.aerodynamicScore}/100',
+          color: _scoreColor(result.aerodynamicScore),
+        ),
+        ResultCard(
+          title: 'Propulsion Score',
+          value: '${result.propulsionScore}/100',
+          color: _scoreColor(result.propulsionScore),
+        ),
+        ResultCard(
+          title: 'Energy Score',
+          value: '${result.energyScore}/100',
+          color: _scoreColor(result.energyScore),
+        ),
+      ]),
     );
   }
 
@@ -124,6 +163,7 @@ class AnalysisResultPage extends StatelessWidget {
         ResultCard(
           title: 'Wing Loading Status',
           value: result.wingLoadingStatus,
+          color: _statusCardColor(result.wingLoadingStatus),
         ),
         ResultCard(
           title: 'Stall Speed',
@@ -146,12 +186,20 @@ class AnalysisResultPage extends StatelessWidget {
           title: 'Thrust / Weight',
           value: result.thrustToWeight.toStringAsFixed(2),
         ),
-        ResultCard(title: 'Thrust Status', value: result.thrustToWeightStatus),
+        ResultCard(
+          title: 'Thrust Status',
+          value: result.thrustToWeightStatus,
+          color: _statusCardColor(result.thrustToWeightStatus),
+        ),
         ResultCard(
           title: 'Power / Weight',
           value: '${result.powerToWeight.toStringAsFixed(1)} W/kg',
         ),
-        ResultCard(title: 'Power Status', value: result.powerToWeightStatus),
+        ResultCard(
+          title: 'Power Status',
+          value: result.powerToWeightStatus,
+          color: _statusCardColor(result.powerToWeightStatus),
+        ),
       ]),
     );
   }
@@ -170,6 +218,8 @@ class AnalysisResultPage extends StatelessWidget {
   }
 
   Widget _buildRecommendationCard() {
+    final recommendations = result.recommendation.split('\n');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(26),
@@ -195,13 +245,18 @@ class AnalysisResultPage extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            result.recommendation,
-            style: const TextStyle(
-              fontSize: 16,
-              height: 1.5,
-              color: Color(0xFF486581),
+          const SizedBox(height: 18),
+          ...recommendations.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                item,
+                style: const TextStyle(
+                  fontSize: 16,
+                  height: 1.4,
+                  color: Color(0xFF486581),
+                ),
+              ),
             ),
           ),
         ],
@@ -221,12 +276,44 @@ class AnalysisResultPage extends StatelessWidget {
     );
   }
 
+  String _buildStars(int score) {
+    if (score >= 90) return '★★★★★';
+    if (score >= 80) return '★★★★☆';
+    if (score >= 70) return '★★★☆☆';
+    if (score >= 60) return '★★☆☆☆';
+    return '★☆☆☆☆';
+  }
+
   Color _statusColor(String status) {
     if (status == 'Güvenli') {
       return Colors.green;
     }
 
     if (status == 'Dikkat') {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _scoreColor(int score) {
+    if (score >= 90) {
+      return Colors.green;
+    }
+
+    if (score >= 70) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _statusCardColor(String status) {
+    if (status == 'İyi' || status == 'Çok İyi' || status == 'Çok Güçlü') {
+      return Colors.green;
+    }
+
+    if (status == 'Orta' || status == 'Yeterli') {
       return Colors.orange;
     }
 
