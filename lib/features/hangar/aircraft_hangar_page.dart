@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../data/entities/aircraft_entity.dart';
+import '../../data/services/aircraft_service.dart';
 import '../analysis/new_analysis_page.dart';
 import 'aircraft_form_dialog.dart';
 
@@ -12,114 +14,95 @@ class AircraftHangarPage extends StatefulWidget {
 
 class _AircraftHangarPageState extends State<AircraftHangarPage> {
   final TextEditingController _searchController = TextEditingController();
+  final AircraftService _aircraftService = AircraftService();
 
   String _selectedType = 'Tümü';
   String _selectedSort = 'En Yeni';
 
-  final List<Map<String, dynamic>> _aircraftList = [
-    {
-      'name': 'F16 Prototype',
-      'type': 'Sabit Kanat',
-      'weight': 2.35,
-      'wingArea': 0.46,
-      'wingSpan': 1.40,
-      'motorCount': 1,
-      'motorPower': 1200.0,
-      'propellerDiameter': 14.0,
-      'battery': '6S LiPo',
-      'batteryType': 'LiPo',
-      'batteryVoltage': 22.2,
-      'batteryCapacity': 5000.0,
-      'batteryCellCount': 6,
-      'created': DateTime(2026, 7, 8),
-    },
-    {
-      'name': 'UAV-X Drone',
-      'type': 'Drone',
-      'weight': 1.20,
-      'wingArea': 0.00,
-      'wingSpan': 0.00,
-      'motorCount': 4,
-      'motorPower': 800.0,
-      'propellerDiameter': 10.0,
-      'battery': '4S LiPo',
-      'batteryType': 'LiPo',
-      'batteryVoltage': 14.8,
-      'batteryCapacity': 5200.0,
-      'batteryCellCount': 4,
-      'created': DateTime(2026, 7, 9),
-    },
-    {
-      'name': 'VTOL Alpha',
-      'type': 'VTOL',
-      'weight': 3.10,
-      'wingArea': 0.55,
-      'wingSpan': 1.80,
-      'motorCount': 4,
-      'motorPower': 1600.0,
-      'propellerDiameter': 12.0,
-      'battery': '6S Li-Ion',
-      'batteryType': 'Li-Ion',
-      'batteryVoltage': 21.6,
-      'batteryCapacity': 10000.0,
-      'batteryCellCount': 6,
-      'created': DateTime(2026, 7, 10),
-    },
-  ];
+  List<AircraftEntity> _aircraftList = [];
+  bool _isLoading = true;
 
-  List<Map<String, dynamic>> get _filteredAircraft {
+  @override
+  void initState() {
+    super.initState();
+    _initializeHangar();
+  }
+
+  Future<void> _initializeHangar() async {
+    try {
+      await _aircraftService.ensureInitialAircraft();
+      await _loadAircraft();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      _showMessage('Araç verileri yüklenemedi: $error');
+    }
+  }
+
+  Future<void> _loadAircraft() async {
+    final aircraft = _aircraftService.getAllAircraft();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _aircraftList = aircraft;
+      _isLoading = false;
+    });
+  }
+
+  List<AircraftEntity> get _filteredAircraft {
     final searchText = _searchController.text.trim().toLowerCase();
 
     final result = _aircraftList.where((aircraft) {
-      final name = aircraft['name'].toString().toLowerCase();
-      final type = aircraft['type'].toString();
+      final name = aircraft.name.toLowerCase();
+      final type = aircraft.type.toLowerCase();
 
       final matchesSearch =
           searchText.isEmpty ||
           name.contains(searchText) ||
-          type.toLowerCase().contains(searchText);
+          type.contains(searchText);
 
-      final matchesType = _selectedType == 'Tümü' || type == _selectedType;
+      final matchesType =
+          _selectedType == 'Tümü' || aircraft.type == _selectedType;
 
       return matchesSearch && matchesType;
     }).toList();
 
     switch (_selectedSort) {
       case 'En Yeni':
-        result.sort(
-          (a, b) =>
-              (b['created'] as DateTime).compareTo(a['created'] as DateTime),
-        );
+        result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         break;
+
       case 'En Eski':
-        result.sort(
-          (a, b) =>
-              (a['created'] as DateTime).compareTo(b['created'] as DateTime),
-        );
+        result.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         break;
+
       case 'İsim A-Z':
         result.sort(
-          (a, b) => a['name'].toString().toLowerCase().compareTo(
-            b['name'].toString().toLowerCase(),
-          ),
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
         );
         break;
+
       case 'İsim Z-A':
         result.sort(
-          (a, b) => b['name'].toString().toLowerCase().compareTo(
-            a['name'].toString().toLowerCase(),
-          ),
+          (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()),
         );
         break;
+
       case 'Ağırlık - Artan':
-        result.sort(
-          (a, b) => (a['weight'] as num).compareTo(b['weight'] as num),
-        );
+        result.sort((a, b) => a.weightKg.compareTo(b.weightKg));
         break;
+
       case 'Ağırlık - Azalan':
-        result.sort(
-          (a, b) => (b['weight'] as num).compareTo(a['weight'] as num),
-        );
+        result.sort((a, b) => b.weightKg.compareTo(a.weightKg));
         break;
     }
 
@@ -127,7 +110,9 @@ class _AircraftHangarPageState extends State<AircraftHangarPage> {
   }
 
   int _countByType(String type) {
-    return _aircraftList.where((aircraft) => aircraft['type'] == type).length;
+    return _aircraftList.where((aircraft) {
+      return aircraft.type == type;
+    }).length;
   }
 
   void _showMessage(String message) {
@@ -143,83 +128,65 @@ class _AircraftHangarPageState extends State<AircraftHangarPage> {
   }
 
   Future<void> _createNewAircraft() async {
-    final newAircraft = await showDialog<Map<String, dynamic>>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
       builder: (_) => const AircraftFormDialog(),
     );
 
-    if (!mounted || newAircraft == null) {
+    if (!mounted || result == null) {
       return;
     }
 
-    setState(() {
-      _aircraftList.add(newAircraft);
-    });
+    try {
+      final aircraft = await _aircraftService.createAircraft(result);
 
-    _showMessage('${newAircraft['name']} araç kütüphanesine eklendi.');
+      await _loadAircraft();
+
+      _showMessage('${aircraft.name} araç kütüphanesine eklendi.');
+    } catch (error) {
+      _showMessage('Araç kaydedilemedi: $error');
+    }
   }
 
-  Future<void> _editAircraft(Map<String, dynamic> aircraft) async {
-    final editedAircraft = await showDialog<Map<String, dynamic>>(
+  Future<void> _editAircraft(AircraftEntity aircraft) async {
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
-      builder: (_) =>
-          AircraftFormDialog(aircraft: Map<String, dynamic>.from(aircraft)),
+      builder: (_) => AircraftFormDialog(aircraft: aircraft.toMap()),
     );
 
-    if (!mounted || editedAircraft == null) {
+    if (!mounted || result == null) {
       return;
     }
 
-    final aircraftIndex = _aircraftList.indexOf(aircraft);
+    try {
+      final editedAircraft = await _aircraftService.updateAircraft(
+        currentAircraft: aircraft,
+        formData: result,
+      );
 
-    if (aircraftIndex == -1) {
-      _showMessage('Düzenlenecek araç bulunamadı.');
-      return;
+      await _loadAircraft();
+
+      _showMessage('${editedAircraft.name} başarıyla güncellendi.');
+    } catch (error) {
+      _showMessage('Araç güncellenemedi: $error');
     }
-
-    setState(() {
-      _aircraftList[aircraftIndex] = editedAircraft;
-    });
-
-    _showMessage('${editedAircraft['name']} başarıyla güncellendi.');
   }
 
-  String _createCopyName(String originalName) {
-    final baseName = '$originalName Kopya';
+  Future<void> _duplicateAircraft(AircraftEntity aircraft) async {
+    try {
+      await _aircraftService.duplicateAircraft(aircraft);
 
-    if (!_aircraftList.any((aircraft) => aircraft['name'] == baseName)) {
-      return baseName;
+      await _loadAircraft();
+
+      _showMessage('${aircraft.name} başarıyla kopyalandı.');
+    } catch (error) {
+      _showMessage('Araç kopyalanamadı: $error');
     }
-
-    int copyNumber = 2;
-
-    while (_aircraftList.any(
-      (aircraft) => aircraft['name'] == '$baseName $copyNumber',
-    )) {
-      copyNumber++;
-    }
-
-    return '$baseName $copyNumber';
   }
 
-  void _duplicateAircraft(Map<String, dynamic> aircraft) {
-    final copiedAircraft = Map<String, dynamic>.from(aircraft);
-
-    copiedAircraft['name'] = _createCopyName(aircraft['name'].toString());
-    copiedAircraft['created'] = DateTime.now();
-
-    setState(() {
-      _aircraftList.add(copiedAircraft);
-    });
-
-    _showMessage('${aircraft['name']} başarıyla kopyalandı.');
-  }
-
-  Future<void> _confirmDeleteAircraft(Map<String, dynamic> aircraft) async {
-    final aircraftName = aircraft['name'].toString();
-
+  Future<void> _confirmDeleteAircraft(AircraftEntity aircraft) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -233,7 +200,7 @@ class _AircraftHangarPageState extends State<AircraftHangarPage> {
             ],
           ),
           content: Text(
-            '$aircraftName adlı aracı silmek istediğinize '
+            '${aircraft.name} adlı aracı silmek istediğinize '
             'emin misiniz?\n\nBu işlem geri alınamaz.',
           ),
           actions: [
@@ -263,20 +230,23 @@ class _AircraftHangarPageState extends State<AircraftHangarPage> {
       return;
     }
 
-    setState(() {
-      _aircraftList.remove(aircraft);
-    });
+    try {
+      await _aircraftService.deleteAircraft(aircraft.id);
+      await _loadAircraft();
 
-    _showMessage('$aircraftName başarıyla silindi.');
+      _showMessage('${aircraft.name} başarıyla silindi.');
+    } catch (error) {
+      _showMessage('Araç silinemedi: $error');
+    }
   }
 
-  void _openAircraft(Map<String, dynamic> aircraft) {
+  void _openAircraft(AircraftEntity aircraft) {
+    final engineeringAircraft = _aircraftService.toEngineeringModel(aircraft);
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => NewAnalysisPage(
-          initialAircraft: Map<String, dynamic>.from(aircraft),
-        ),
+        builder: (_) => NewAnalysisPage(initialAircraft: engineeringAircraft),
       ),
     );
   }
@@ -306,7 +276,7 @@ class _AircraftHangarPageState extends State<AircraftHangarPage> {
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: FilledButton.icon(
-              onPressed: _createNewAircraft,
+              onPressed: _isLoading ? null : _createNewAircraft,
               icon: const Icon(Icons.add),
               label: const Text('Yeni Araç'),
             ),
@@ -319,54 +289,56 @@ class _AircraftHangarPageState extends State<AircraftHangarPage> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1400),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _HangarHeader(),
-                  const SizedBox(height: 24),
-                  _buildControls(),
-                  const SizedBox(height: 20),
-                  _buildStats(),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: filteredAircraft.isEmpty
-                        ? _EmptyState(
-                            hasAircraft: _aircraftList.isNotEmpty,
-                            onClearFilters: _clearFilters,
-                            onCreateAircraft: _createNewAircraft,
-                          )
-                        : GridView.builder(
-                            itemCount: filteredAircraft.length,
-                            gridDelegate:
-                                const SliverGridDelegateWithMaxCrossAxisExtent(
-                                  maxCrossAxisExtent: 380,
-                                  mainAxisExtent: 350,
-                                  mainAxisSpacing: 20,
-                                  crossAxisSpacing: 20,
-                                ),
-                            itemBuilder: (context, index) {
-                              final aircraft = filteredAircraft[index];
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _HangarHeader(),
+                        const SizedBox(height: 24),
+                        _buildControls(),
+                        const SizedBox(height: 20),
+                        _buildStats(),
+                        const SizedBox(height: 24),
+                        Expanded(
+                          child: filteredAircraft.isEmpty
+                              ? _EmptyState(
+                                  hasAircraft: _aircraftList.isNotEmpty,
+                                  onClearFilters: _clearFilters,
+                                  onCreateAircraft: _createNewAircraft,
+                                )
+                              : GridView.builder(
+                                  itemCount: filteredAircraft.length,
+                                  gridDelegate:
+                                      const SliverGridDelegateWithMaxCrossAxisExtent(
+                                        maxCrossAxisExtent: 380,
+                                        mainAxisExtent: 350,
+                                        mainAxisSpacing: 20,
+                                        crossAxisSpacing: 20,
+                                      ),
+                                  itemBuilder: (context, index) {
+                                    final aircraft = filteredAircraft[index];
 
-                              return _AircraftCard(
-                                aircraft: aircraft,
-                                onOpen: () {
-                                  _openAircraft(aircraft);
-                                },
-                                onEdit: () async {
-                                  await _editAircraft(aircraft);
-                                },
-                                onDuplicate: () {
-                                  _duplicateAircraft(aircraft);
-                                },
-                                onDelete: () async {
-                                  await _confirmDeleteAircraft(aircraft);
-                                },
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
+                                    return _AircraftCard(
+                                      aircraft: aircraft,
+                                      onOpen: () {
+                                        _openAircraft(aircraft);
+                                      },
+                                      onEdit: () async {
+                                        await _editAircraft(aircraft);
+                                      },
+                                      onDuplicate: () async {
+                                        await _duplicateAircraft(aircraft);
+                                      },
+                                      onDelete: () async {
+                                        await _confirmDeleteAircraft(aircraft);
+                                      },
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ),
@@ -647,7 +619,7 @@ class _HangarStatCard extends StatelessWidget {
 }
 
 class _AircraftCard extends StatefulWidget {
-  final Map<String, dynamic> aircraft;
+  final AircraftEntity aircraft;
   final VoidCallback onOpen;
   final VoidCallback onEdit;
   final VoidCallback onDuplicate;
@@ -720,7 +692,7 @@ class _AircraftCardState extends State<_AircraftCard> {
                     children: [
                       Expanded(
                         child: Text(
-                          aircraft['name'].toString(),
+                          aircraft.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -748,7 +720,7 @@ class _AircraftCardState extends State<_AircraftCard> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      aircraft['type'].toString(),
+                      aircraft.type,
                       style: const TextStyle(
                         color: Color(0xFF0B3D91),
                         fontWeight: FontWeight.w600,
@@ -758,19 +730,22 @@ class _AircraftCardState extends State<_AircraftCard> {
                   const Divider(height: 28),
                   _AircraftInfoRow(
                     label: 'Ağırlık',
-                    value: '${aircraft['weight']} kg',
+                    value: '${aircraft.weightKg} kg',
                   ),
                   _AircraftInfoRow(
                     label: 'Kanat Alanı',
-                    value: '${aircraft['wingArea']} m²',
+                    value: '${aircraft.wingAreaM2} m²',
                   ),
                   _AircraftInfoRow(
                     label: 'Motor Gücü',
-                    value: '${aircraft['motorPower']} W',
+                    value: '${aircraft.motorPowerW} W',
                   ),
                   _AircraftInfoRow(
                     label: 'Batarya',
-                    value: aircraft['battery'].toString(),
+                    value: aircraft.batteryDescription.isEmpty
+                        ? '${aircraft.batteryCellCount}S '
+                              '${aircraft.batteryType}'
+                        : aircraft.batteryDescription,
                   ),
                   const Spacer(),
                   _AircraftActions(

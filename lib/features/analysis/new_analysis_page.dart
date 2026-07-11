@@ -8,7 +8,7 @@ import 'services/battery_validation_service.dart';
 import 'widgets/analysis_section.dart';
 
 class NewAnalysisPage extends StatefulWidget {
-  final Map<String, dynamic>? initialAircraft;
+  final Aircraft? initialAircraft;
 
   const NewAnalysisPage({super.key, this.initialAircraft});
 
@@ -41,45 +41,45 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     final aircraft = widget.initialAircraft;
 
     _nameController = TextEditingController(
-      text: aircraft?['name']?.toString() ?? 'Eğitim Drone V1',
+      text: aircraft?.name ?? 'Eğitim Drone V1',
     );
     _weightController = TextEditingController(
-      text: aircraft?['weight']?.toString() ?? '2.4',
+      text: aircraft?.weightKg.toString() ?? '2.4',
     );
     _wingAreaController = TextEditingController(
-      text: aircraft?['wingArea']?.toString() ?? '0.45',
+      text: aircraft?.wingAreaM2.toString() ?? '0.45',
     );
     _wingSpanController = TextEditingController(
-      text: aircraft?['wingSpan']?.toString() ?? '1.2',
+      text: aircraft?.wingSpanM.toString() ?? '1.2',
     );
     _motorPowerController = TextEditingController(
-      text: aircraft?['motorPower']?.toString() ?? '850',
+      text: aircraft?.motorPowerW.toString() ?? '850',
     );
     _motorCountController = TextEditingController(
-      text: aircraft?['motorCount']?.toString() ?? '4',
+      text: aircraft?.motorCount.toString() ?? '4',
     );
     _propellerDiameterController = TextEditingController(
-      text: aircraft?['propellerDiameter']?.toString() ?? '10',
+      text: aircraft?.propellerDiameterInch.toString() ?? '10',
     );
     _batteryCapacityController = TextEditingController(
-      text: aircraft?['batteryCapacity']?.toString() ?? '5200',
+      text: aircraft?.batteryCapacityMah.toString() ?? '5200',
     );
     _batteryVoltageController = TextEditingController(
-      text: aircraft?['batteryVoltage']?.toString() ?? '14.8',
+      text: aircraft?.batteryVoltageV.toString() ?? '14.8',
     );
     _batteryCellController = TextEditingController(
-      text: aircraft?['batteryCellCount']?.toString() ?? '4',
+      text: aircraft?.batteryCellCount.toString() ?? '4',
     );
     _windSpeedController = TextEditingController(text: '12');
 
-    final aircraftType = aircraft?['type']?.toString();
+    final aircraftType = aircraft?.type;
     if (aircraftType == 'Drone' ||
         aircraftType == 'Sabit Kanat' ||
         aircraftType == 'VTOL') {
       _selectedAircraftType = aircraftType!;
     }
 
-    final batteryType = aircraft?['batteryType']?.toString();
+    final batteryType = aircraft?.batteryType;
     if (batteryType == 'LiPo' ||
         batteryType == 'Li-Ion' ||
         batteryType == 'LiHV') {
