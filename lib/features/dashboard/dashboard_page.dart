@@ -104,14 +104,37 @@ class _DashboardPageState extends State<DashboardPage>
                                   return _DashboardCard(
                                     item: item,
                                     onTap: () {
-                                      if (item.title == 'Yeni Analiz') {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const NewAnalysisPage(),
-                                          ),
-                                        );
+                                      switch (item.title) {
+                                        case 'Yeni Analiz':
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const NewAnalysisPage(),
+                                            ),
+                                          );
+                                          break;
+
+                                        case 'Araç Kütüphanesi':
+                                          Navigator.pushNamed(
+                                            context,
+                                            '/hangar',
+                                          );
+                                          break;
+
+                                        default:
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '${item.title} modülü yakında eklenecek.',
+                                              ),
+                                              duration: const Duration(
+                                                seconds: 2,
+                                              ),
+                                            ),
+                                          );
                                       }
                                     },
                                   );
@@ -249,17 +272,13 @@ class _StatsRow extends StatelessWidget {
         Expanded(
           child: _StatCard(title: 'Analiz Sayısı', value: '0'),
         ),
-        SizedBox(width: 14),
+        SizedBox(width: 16),
         Expanded(
           child: _StatCard(title: 'Kayıtlı Araç', value: '0'),
         ),
-        SizedBox(width: 14),
+        SizedBox(width: 16),
         Expanded(
-          child: _StatCard(title: 'Son Analiz', value: '-'),
-        ),
-        SizedBox(width: 14),
-        Expanded(
-          child: _StatCard(title: 'Sürüm', value: '0.7 Alpha'),
+          child: _StatCard(title: 'Risk Raporu', value: '0'),
         ),
       ],
     );
@@ -277,7 +296,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFF0F4F8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFD9E2EC)),
       ),
@@ -285,17 +304,17 @@ class _StatCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF627D98)),
-          ),
-          const SizedBox(height: 8),
-          Text(
             value,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 26,
               fontWeight: FontWeight.bold,
               color: Color(0xFF102A43),
             ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 13, color: Color(0xFF627D98)),
           ),
         ],
       ),
@@ -314,65 +333,61 @@ class _DashboardCard extends StatefulWidget {
 }
 
 class _DashboardCardState extends State<_DashboardCard> {
-  bool _isHovered = false;
+  bool isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) {
+        setState(() {
+          isHovered = true;
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          isHovered = false;
+        });
+      },
       child: AnimatedScale(
-        scale: _isHovered ? 1.02 : 1.0,
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
+        scale: isHovered ? 1.03 : 1.0,
+        duration: const Duration(milliseconds: 180),
         child: InkWell(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(22),
           onTap: widget.onTap,
-          child: Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: _isHovered
-                    ? const Color(0xFF0B3D91).withValues(alpha: 0.35)
-                    : const Color(0xFFD9E2EC),
-              ),
-              boxShadow: [
-                if (_isHovered)
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-              ],
+          child: Card(
+            elevation: isHovered ? 8 : 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  widget.item.icon,
-                  size: 34,
-                  color: const Color(0xFF0B3D91),
-                ),
-                const Spacer(),
-                Text(
-                  widget.item.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF102A43),
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    widget.item.icon,
+                    size: 34,
+                    color: const Color(0xFF0B3D91),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.item.subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF627D98),
+                  const Spacer(),
+                  Text(
+                    widget.item.title,
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF102A43),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.item.subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF627D98),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -386,5 +401,5 @@ class _DashboardItem {
   final String subtitle;
   final IconData icon;
 
-  _DashboardItem(this.title, this.subtitle, this.icon);
+  const _DashboardItem(this.title, this.subtitle, this.icon);
 }

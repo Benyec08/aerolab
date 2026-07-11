@@ -4,11 +4,13 @@ import 'analysis_result_page.dart';
 import 'models/aircraft.dart';
 import 'models/environment.dart';
 import 'services/analysis_service.dart';
-import 'widgets/analysis_section.dart';
 import 'services/battery_validation_service.dart';
+import 'widgets/analysis_section.dart';
 
 class NewAnalysisPage extends StatefulWidget {
-  const NewAnalysisPage({super.key});
+  final Map<String, dynamic>? initialAircraft;
+
+  const NewAnalysisPage({super.key, this.initialAircraft});
 
   @override
   State<NewAnalysisPage> createState() => _NewAnalysisPageState();
@@ -17,31 +19,83 @@ class NewAnalysisPage extends StatefulWidget {
 class _NewAnalysisPageState extends State<NewAnalysisPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController = TextEditingController(text: 'Eğitim Drone V1');
-  final _weightController = TextEditingController(text: '2.4');
-  final _wingAreaController = TextEditingController(text: '0.45');
-  final _wingSpanController = TextEditingController(text: '1.2');
-  final _motorPowerController = TextEditingController(text: '850');
-  final _motorCountController = TextEditingController(text: '4');
-  final _propellerDiameterController = TextEditingController(text: '10');
-  final _batteryCapacityController = TextEditingController(text: '5200');
-  final _batteryVoltageController = TextEditingController(text: '14.8');
-  final _batteryCellController = TextEditingController(text: '4');
+  late final TextEditingController _nameController;
+  late final TextEditingController _weightController;
+  late final TextEditingController _wingAreaController;
+  late final TextEditingController _wingSpanController;
+  late final TextEditingController _motorPowerController;
+  late final TextEditingController _motorCountController;
+  late final TextEditingController _propellerDiameterController;
+  late final TextEditingController _batteryCapacityController;
+  late final TextEditingController _batteryVoltageController;
+  late final TextEditingController _batteryCellController;
+  late final TextEditingController _windSpeedController;
 
   String _batteryType = 'LiPo';
-  final _windSpeedController = TextEditingController(text: '12');
-
   String _selectedAircraftType = 'Drone';
 
   @override
+  void initState() {
+    super.initState();
+
+    final aircraft = widget.initialAircraft;
+
+    _nameController = TextEditingController(
+      text: aircraft?['name']?.toString() ?? 'Eğitim Drone V1',
+    );
+    _weightController = TextEditingController(
+      text: aircraft?['weight']?.toString() ?? '2.4',
+    );
+    _wingAreaController = TextEditingController(
+      text: aircraft?['wingArea']?.toString() ?? '0.45',
+    );
+    _wingSpanController = TextEditingController(
+      text: aircraft?['wingSpan']?.toString() ?? '1.2',
+    );
+    _motorPowerController = TextEditingController(
+      text: aircraft?['motorPower']?.toString() ?? '850',
+    );
+    _motorCountController = TextEditingController(
+      text: aircraft?['motorCount']?.toString() ?? '4',
+    );
+    _propellerDiameterController = TextEditingController(
+      text: aircraft?['propellerDiameter']?.toString() ?? '10',
+    );
+    _batteryCapacityController = TextEditingController(
+      text: aircraft?['batteryCapacity']?.toString() ?? '5200',
+    );
+    _batteryVoltageController = TextEditingController(
+      text: aircraft?['batteryVoltage']?.toString() ?? '14.8',
+    );
+    _batteryCellController = TextEditingController(
+      text: aircraft?['batteryCellCount']?.toString() ?? '4',
+    );
+    _windSpeedController = TextEditingController(text: '12');
+
+    final aircraftType = aircraft?['type']?.toString();
+    if (aircraftType == 'Drone' ||
+        aircraftType == 'Sabit Kanat' ||
+        aircraftType == 'VTOL') {
+      _selectedAircraftType = aircraftType!;
+    }
+
+    final batteryType = aircraft?['batteryType']?.toString();
+    if (batteryType == 'LiPo' ||
+        batteryType == 'Li-Ion' ||
+        batteryType == 'LiHV') {
+      _batteryType = batteryType!;
+    }
+  }
+
+  @override
   void dispose() {
-    _motorCountController.dispose();
-    _propellerDiameterController.dispose();
     _nameController.dispose();
     _weightController.dispose();
     _wingAreaController.dispose();
     _wingSpanController.dispose();
     _motorPowerController.dispose();
+    _motorCountController.dispose();
+    _propellerDiameterController.dispose();
     _batteryCapacityController.dispose();
     _batteryVoltageController.dispose();
     _batteryCellController.dispose();
@@ -51,13 +105,14 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
   }
 
   double _toDouble(TextEditingController controller) {
-    return double.tryParse(controller.text.replaceAll(',', '.')) ?? 0;
+    return double.tryParse(controller.text.trim().replaceAll(',', '.')) ?? 0;
   }
 
   void _startAnalysis() {
-    if (!_formKey.currentState!.validate()) {
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
+
     final batteryValidator = BatteryValidationService();
 
     final isBatteryVoltageValid = batteryValidator.isVoltageValid(
@@ -74,12 +129,11 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
           ),
         ),
       );
-
       return;
     }
 
     final aircraft = Aircraft(
-      name: _nameController.text,
+      name: _nameController.text.trim(),
       type: _selectedAircraftType,
       weightKg: _toDouble(_weightController),
       wingAreaM2: _toDouble(_wingAreaController),
@@ -112,10 +166,12 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
 
   @override
   Widget build(BuildContext context) {
+    final openedFromHangar = widget.initialAircraft != null;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FB),
       appBar: AppBar(
-        title: const Text('Yeni Analiz'),
+        title: Text(openedFromHangar ? 'Araç Analizi' : 'Yeni Analiz'),
         backgroundColor: Colors.transparent,
       ),
       body: Center(
@@ -136,18 +192,22 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Yeni Uçuş Analizi',
-                        style: TextStyle(
+                      Text(
+                        openedFromHangar
+                            ? 'Kayıtlı Araç Analizi'
+                            : 'Yeni Uçuş Analizi',
+                        style: const TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF102A43),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Hava aracı ve çevre bilgilerini girerek performans analizi oluştur.',
-                        style: TextStyle(
+                      Text(
+                        openedFromHangar
+                            ? 'Araç Kütüphanesi verileri forma aktarıldı. Analiz koşullarını kontrol ederek analizi başlatın.'
+                            : 'Hava aracı ve çevre bilgilerini girerek performans analizi oluştur.',
+                        style: const TextStyle(
                           fontSize: 15,
                           color: Color(0xFF627D98),
                         ),
@@ -159,6 +219,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                         child: Column(
                           children: [
                             DropdownButtonFormField<String>(
+                              key: ValueKey(_selectedAircraftType),
                               initialValue: _selectedAircraftType,
                               decoration: const InputDecoration(
                                 labelText: 'Araç Tipi',
@@ -184,10 +245,12 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                                 });
                               },
                             ),
-
                             const SizedBox(height: 18),
-
-                            _buildTextField('Araç Adı', _nameController),
+                            _buildTextField(
+                              'Araç Adı',
+                              _nameController,
+                              numeric: false,
+                            ),
                           ],
                         ),
                       ),
@@ -200,10 +263,12 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                             _buildTextField(
                               'Kanat Alanı (m²)',
                               _wingAreaController,
+                              allowZero: true,
                             ),
                             _buildTextField(
                               'Kanat Açıklığı (m)',
                               _wingSpanController,
+                              allowZero: true,
                             ),
                           ],
                         ),
@@ -220,6 +285,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                             _buildTextField(
                               'Motor Sayısı',
                               _motorCountController,
+                              integerOnly: true,
                             ),
                             _buildTextField(
                               'Pervane Çapı (inch)',
@@ -234,6 +300,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                         child: Column(
                           children: [
                             DropdownButtonFormField<String>(
+                              key: ValueKey(_batteryType),
                               initialValue: _batteryType,
                               decoration: const InputDecoration(
                                 labelText: 'Batarya Tipi',
@@ -259,7 +326,6 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                                 });
                               },
                             ),
-
                             const SizedBox(height: 18),
                             _buildTextField(
                               'Batarya Kapasitesi (mAh)',
@@ -272,6 +338,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                             _buildTextField(
                               'Hücre Sayısı (S)',
                               _batteryCellController,
+                              integerOnly: true,
                             ),
                           ],
                         ),
@@ -284,6 +351,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                             _buildTextField(
                               'Rüzgâr Hızı (km/h)',
                               _windSpeedController,
+                              allowZero: true,
                             ),
                           ],
                         ),
@@ -314,11 +382,20 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool numeric = true,
+    bool allowZero = false,
+    bool integerOnly = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: TextFormField(
         controller: controller,
+        keyboardType: numeric
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -327,6 +404,27 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
           if (value == null || value.trim().isEmpty) {
             return '$label boş bırakılamaz';
           }
+
+          if (!numeric) {
+            return null;
+          }
+
+          final number = double.tryParse(value.trim().replaceAll(',', '.'));
+
+          if (number == null) {
+            return '$label için geçerli bir sayı giriniz';
+          }
+
+          if (allowZero ? number < 0 : number <= 0) {
+            return allowZero
+                ? '$label negatif olamaz'
+                : '$label sıfırdan büyük olmalıdır';
+          }
+
+          if (integerOnly && number != number.roundToDouble()) {
+            return '$label tam sayı olmalıdır';
+          }
+
           return null;
         },
       ),
