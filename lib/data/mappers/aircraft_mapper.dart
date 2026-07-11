@@ -18,6 +18,10 @@ class AircraftMapper {
       batteryVoltageV: entity.batteryVoltageV,
       batteryType: entity.batteryType,
       batteryCellCount: entity.batteryCellCount,
+      cruiseSpeedMs: entity.cruiseSpeedMs,
+      zeroLiftDragCoefficient: entity.zeroLiftDragCoefficient,
+      maxLiftCoefficient: entity.maxLiftCoefficient,
+      oswaldEfficiencyFactor: entity.oswaldEfficiencyFactor,
     );
   }
 
@@ -46,6 +50,10 @@ class AircraftMapper {
       batteryDescription: batteryDescription,
       createdAt: createdAt ?? now,
       updatedAt: now,
+      cruiseSpeedMs: model.cruiseSpeedMs,
+      zeroLiftDragCoefficient: model.zeroLiftDragCoefficient,
+      maxLiftCoefficient: model.maxLiftCoefficient,
+      oswaldEfficiencyFactor: model.oswaldEfficiencyFactor,
     );
   }
 }

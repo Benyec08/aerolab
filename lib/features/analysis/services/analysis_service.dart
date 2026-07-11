@@ -25,8 +25,6 @@ import '../models/environment.dart';
 import '../models/analysis_result.dart';
 
 import 'air_density_service.dart';
-import 'lift_service.dart';
-import 'drag_service.dart';
 import 'stall_service.dart';
 import 'flight_time_service.dart';
 import 'risk_service.dart';
@@ -37,6 +35,7 @@ import 'thrust_service.dart';
 import 'recommendation_service.dart';
 import 'score_service.dart';
 import 'mission_power_service.dart';
+import 'aerodynamic_performance_service.dart';
 
 class AnalysisService {
   final _aspectRatioService = AspectRatioService();
@@ -44,49 +43,27 @@ class AnalysisService {
   final _powerToWeightService = PowerToWeightService();
   final _thrustService = ThrustService();
   final AirDensityService airDensityService = AirDensityService();
-  final LiftService liftService = LiftService();
-  final DragService dragService = DragService();
   final StallService stallService = StallService();
   final FlightTimeService flightTimeService = FlightTimeService();
   final RiskService riskService = RiskService();
   final _recommendationService = RecommendationService();
   final _scoreService = ScoreService();
   final _missionPowerService = MissionPowerService();
+  final _aerodynamicPerformanceService = AerodynamicPerformanceService();
 
   AnalysisResult analyze(Aircraft aircraft, Environment environment) {
-    const double flightSpeedMs = 15;
-    const double liftCoefficient = 1.1;
-    const double dragCoefficient = 0.045;
-    const double clMax = 1.4;
-
     final bool hasFixedWingAerodynamics =
         aircraft.type == 'Sabit Kanat' ||
         (aircraft.type == 'VTOL' &&
             aircraft.wingAreaM2 > 0 &&
             aircraft.wingSpanM > 0);
 
+    final double cruiseSpeedMs = aircraft.cruiseSpeedMs;
+
     final double airDensity = airDensityService.calculateWithAltitude(
       altitudeM: environment.altitudeM,
       temperatureC: environment.temperatureC,
     );
-
-    final double lift = hasFixedWingAerodynamics
-        ? liftService.calculate(
-            airDensity: airDensity,
-            velocityMs: flightSpeedMs,
-            wingAreaM2: aircraft.wingAreaM2,
-            liftCoefficient: liftCoefficient,
-          )
-        : 0;
-
-    final double drag = hasFixedWingAerodynamics
-        ? dragService.calculate(
-            airDensity: airDensity,
-            velocityMs: flightSpeedMs,
-            wingAreaM2: aircraft.wingAreaM2,
-            dragCoefficient: dragCoefficient,
-          )
-        : 0;
 
     final double aspectRatio = hasFixedWingAerodynamics
         ? _aspectRatioService.calculate(
@@ -94,6 +71,43 @@ class AnalysisService {
             wingAreaM2: aircraft.wingAreaM2,
           )
         : 0;
+
+    AerodynamicPerformanceResult? aerodynamicPerformance;
+
+    if (hasFixedWingAerodynamics) {
+      aerodynamicPerformance = _aerodynamicPerformanceService.calculateCruise(
+        weightKg: aircraft.weightKg,
+        airDensityKgM3: airDensity,
+        cruiseSpeedMs: cruiseSpeedMs,
+        wingAreaM2: aircraft.wingAreaM2,
+        aspectRatio: aspectRatio,
+        zeroLiftDragCoefficient: aircraft.zeroLiftDragCoefficient,
+        maxLiftCoefficient: aircraft.maxLiftCoefficient,
+        oswaldEfficiencyFactor: aircraft.oswaldEfficiencyFactor,
+      );
+    }
+
+    final double lift = aerodynamicPerformance?.liftN ?? 0;
+    final double drag = aerodynamicPerformance?.dragN ?? 0;
+
+    final double dynamicPressurePa =
+        aerodynamicPerformance?.dynamicPressurePa ?? 0;
+
+    final double requiredLiftCoefficient =
+        aerodynamicPerformance?.requiredLiftCoefficient ?? 0;
+
+    final double dragCoefficient = aerodynamicPerformance?.dragCoefficient ?? 0;
+
+    final double inducedDragFactor =
+        aerodynamicPerformance?.inducedDragFactor ?? 0;
+
+    final double liftToDragRatio = aerodynamicPerformance?.liftToDragRatio ?? 0;
+
+    final double liftCoefficientUsageRatio =
+        aerodynamicPerformance?.stallMarginRatio ?? 0;
+
+    final bool isCruiseAerodynamicallyValid =
+        aerodynamicPerformance?.isBelowMaximumLiftCoefficient ?? true;
 
     final double wingLoading = hasFixedWingAerodynamics
         ? _wingLoadingService.calculate(
@@ -134,7 +148,7 @@ class AnalysisService {
             weightKg: aircraft.weightKg,
             wingAreaM2: aircraft.wingAreaM2,
             airDensity: airDensity,
-            clMax: clMax,
+            clMax: aircraft.maxLiftCoefficient,
           )
         : 0;
 
@@ -142,7 +156,7 @@ class AnalysisService {
         .calculate(
           aircraft: aircraft,
           airDensityKgM3: airDensity,
-          flightSpeedMs: flightSpeedMs,
+          flightSpeedMs: cruiseSpeedMs,
           dragN: drag,
         );
 
@@ -161,7 +175,7 @@ class AnalysisService {
       thrustToWeight: thrustToWeight,
       evaluateFixedWingAerodynamics: hasFixedWingAerodynamics,
       wingLoading: wingLoading,
-      flightSpeedMs: flightSpeedMs,
+      flightSpeedMs: cruiseSpeedMs,
       stallSpeedMs: stallSpeed,
     );
 
@@ -223,6 +237,14 @@ class AnalysisService {
       averageBatteryCurrentA: flightTimeResult.estimatedAverageCurrentA,
       nominalBatteryEnergyWh: flightTimeResult.nominalEnergyWh,
       usableBatteryEnergyWh: flightTimeResult.effectiveEnergyWh,
+      cruiseSpeedMs: cruiseSpeedMs,
+      dynamicPressurePa: dynamicPressurePa,
+      requiredLiftCoefficient: requiredLiftCoefficient,
+      dragCoefficient: dragCoefficient,
+      inducedDragFactor: inducedDragFactor,
+      liftToDragRatio: liftToDragRatio,
+      liftCoefficientUsageRatio: liftCoefficientUsageRatio,
+      isCruiseAerodynamicallyValid: isCruiseAerodynamicallyValid,
       wingLoadingStatus: wingLoadingStatus,
       powerToWeightStatus: powerToWeightStatus,
       thrustToWeightStatus: thrustToWeightStatus,

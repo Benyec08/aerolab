@@ -12,7 +12,7 @@ class AnalysisResult {
   final double powerToWeight;
   final double estimatedThrustN;
 
-  // Sprint 10A-2
+  // Sprint 10A
   // Görev gücü ve enerji detayları.
   final String missionPowerModelName;
 
@@ -29,6 +29,17 @@ class AnalysisResult {
   final double averageBatteryCurrentA;
   final double nominalBatteryEnergyWh;
   final double usableBatteryEnergyWh;
+
+  // Sprint 10B
+  // Gerçekçi seyir aerodinamiği sonuçları.
+  final double cruiseSpeedMs;
+  final double dynamicPressurePa;
+  final double requiredLiftCoefficient;
+  final double dragCoefficient;
+  final double inducedDragFactor;
+  final double liftToDragRatio;
+  final double liftCoefficientUsageRatio;
+  final bool isCruiseAerodynamicallyValid;
 
   final String wingLoadingStatus;
   final String powerToWeightStatus;
@@ -67,6 +78,14 @@ class AnalysisResult {
     required this.averageBatteryCurrentA,
     required this.nominalBatteryEnergyWh,
     required this.usableBatteryEnergyWh,
+    required this.cruiseSpeedMs,
+    required this.dynamicPressurePa,
+    required this.requiredLiftCoefficient,
+    required this.dragCoefficient,
+    required this.inducedDragFactor,
+    required this.liftToDragRatio,
+    required this.liftCoefficientUsageRatio,
+    required this.isCruiseAerodynamicallyValid,
     required this.wingLoadingStatus,
     required this.powerToWeightStatus,
     required this.thrustToWeightStatus,

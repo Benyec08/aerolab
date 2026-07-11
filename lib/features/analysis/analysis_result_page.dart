@@ -176,6 +176,9 @@ class AnalysisResultPage extends StatelessWidget {
       );
     }
 
+    final liftCoefficientUsagePercent =
+        result.liftCoefficientUsageRatio * 100.0;
+
     return ResultSection(
       title: 'Aerodynamic Performance',
       icon: Icons.air,
@@ -187,6 +190,46 @@ class AnalysisResultPage extends StatelessWidget {
         ResultCard(
           title: 'Drag Force',
           value: '${result.dragN.toStringAsFixed(2)} N',
+        ),
+        ResultCard(
+          title: 'Lift / Drag',
+          value: result.liftToDragRatio.toStringAsFixed(2),
+          color: _liftToDragColor(result.liftToDragRatio),
+        ),
+        ResultCard(
+          title: 'Cruise Speed',
+          value: '${result.cruiseSpeedMs.toStringAsFixed(1)} m/s',
+        ),
+        ResultCard(
+          title: 'Dynamic Pressure',
+          value: '${result.dynamicPressurePa.toStringAsFixed(1)} Pa',
+        ),
+        ResultCard(
+          title: 'Cruise CL',
+          value: result.requiredLiftCoefficient.toStringAsFixed(3),
+          color: _liftCoefficientColor(result.liftCoefficientUsageRatio),
+        ),
+        ResultCard(
+          title: 'Cruise CD',
+          value: result.dragCoefficient.toStringAsFixed(4),
+        ),
+        ResultCard(
+          title: 'Induced Drag Factor',
+          value: result.inducedDragFactor.toStringAsFixed(4),
+        ),
+        ResultCard(
+          title: 'CL / CLmax Usage',
+          value: '${liftCoefficientUsagePercent.toStringAsFixed(1)}%',
+          color: _liftCoefficientColor(result.liftCoefficientUsageRatio),
+        ),
+        ResultCard(
+          title: 'Cruise Validity',
+          value: result.isCruiseAerodynamicallyValid
+              ? 'Geçerli'
+              : 'CLmax Aşıldı',
+          color: result.isCruiseAerodynamicallyValid
+              ? Colors.green
+              : Colors.red,
         ),
         ResultCard(
           title: 'Aspect Ratio',
@@ -504,6 +547,30 @@ class AnalysisResultPage extends StatelessWidget {
     }
 
     if (status == 'Orta' || status == 'Yeterli' || status == 'Uygulanamaz') {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _liftToDragColor(double liftToDragRatio) {
+    if (liftToDragRatio >= 12) {
+      return Colors.green;
+    }
+
+    if (liftToDragRatio >= 8) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _liftCoefficientColor(double usageRatio) {
+    if (usageRatio <= 0.70) {
+      return Colors.green;
+    }
+
+    if (usageRatio <= 0.90) {
       return Colors.orange;
     }
 

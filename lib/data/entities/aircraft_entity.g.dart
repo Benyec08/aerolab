@@ -33,13 +33,23 @@ class AircraftEntityAdapter extends TypeAdapter<AircraftEntity> {
       batteryDescription: fields[13] as String,
       createdAt: fields[14] as DateTime,
       updatedAt: fields[15] as DateTime,
+      cruiseSpeedMs: fields[16] == null ? 15.0 : (fields[16] as num).toDouble(),
+      zeroLiftDragCoefficient: fields[17] == null
+          ? 0.03
+          : (fields[17] as num).toDouble(),
+      maxLiftCoefficient: fields[18] == null
+          ? 1.4
+          : (fields[18] as num).toDouble(),
+      oswaldEfficiencyFactor: fields[19] == null
+          ? 0.8
+          : (fields[19] as num).toDouble(),
     );
   }
 
   @override
   void write(BinaryWriter writer, AircraftEntity obj) {
     writer
-      ..writeByte(16)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -71,7 +81,15 @@ class AircraftEntityAdapter extends TypeAdapter<AircraftEntity> {
       ..writeByte(14)
       ..write(obj.createdAt)
       ..writeByte(15)
-      ..write(obj.updatedAt);
+      ..write(obj.updatedAt)
+      ..writeByte(16)
+      ..write(obj.cruiseSpeedMs)
+      ..writeByte(17)
+      ..write(obj.zeroLiftDragCoefficient)
+      ..writeByte(18)
+      ..write(obj.maxLiftCoefficient)
+      ..writeByte(19)
+      ..write(obj.oswaldEfficiencyFactor);
   }
 
   @override

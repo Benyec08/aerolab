@@ -52,6 +52,23 @@ class AircraftEntity {
   @HiveField(15)
   final DateTime updatedAt;
 
+  // Sprint 10B-1
+  // Sabit kanat ve kanatlı VTOL araçları için aerodinamik girdiler.
+  //
+  // Varsayılan değerler, Sprint 10B öncesinde kaydedilmiş Hive
+  // kayıtlarının güvenli biçimde okunabilmesini sağlar.
+  @HiveField(16, defaultValue: 15.0)
+  final double cruiseSpeedMs;
+
+  @HiveField(17, defaultValue: 0.030)
+  final double zeroLiftDragCoefficient;
+
+  @HiveField(18, defaultValue: 1.4)
+  final double maxLiftCoefficient;
+
+  @HiveField(19, defaultValue: 0.80)
+  final double oswaldEfficiencyFactor;
+
   const AircraftEntity({
     required this.id,
     required this.name,
@@ -69,6 +86,10 @@ class AircraftEntity {
     required this.batteryDescription,
     required this.createdAt,
     required this.updatedAt,
+    this.cruiseSpeedMs = 15.0,
+    this.zeroLiftDragCoefficient = 0.030,
+    this.maxLiftCoefficient = 1.4,
+    this.oswaldEfficiencyFactor = 0.80,
   });
 
   factory AircraftEntity.create({
@@ -85,6 +106,10 @@ class AircraftEntity {
     required String batteryType,
     required int batteryCellCount,
     String batteryDescription = '',
+    double cruiseSpeedMs = 15.0,
+    double zeroLiftDragCoefficient = 0.030,
+    double maxLiftCoefficient = 1.4,
+    double oswaldEfficiencyFactor = 0.80,
   }) {
     final now = DateTime.now();
 
@@ -105,6 +130,10 @@ class AircraftEntity {
       batteryDescription: batteryDescription,
       createdAt: now,
       updatedAt: now,
+      cruiseSpeedMs: cruiseSpeedMs,
+      zeroLiftDragCoefficient: zeroLiftDragCoefficient,
+      maxLiftCoefficient: maxLiftCoefficient,
+      oswaldEfficiencyFactor: oswaldEfficiencyFactor,
     );
   }
 
@@ -125,6 +154,10 @@ class AircraftEntity {
     String? batteryDescription,
     DateTime? createdAt,
     DateTime? updatedAt,
+    double? cruiseSpeedMs,
+    double? zeroLiftDragCoefficient,
+    double? maxLiftCoefficient,
+    double? oswaldEfficiencyFactor,
   }) {
     return AircraftEntity(
       id: id ?? this.id,
@@ -144,6 +177,12 @@ class AircraftEntity {
       batteryDescription: batteryDescription ?? this.batteryDescription,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
+      cruiseSpeedMs: cruiseSpeedMs ?? this.cruiseSpeedMs,
+      zeroLiftDragCoefficient:
+          zeroLiftDragCoefficient ?? this.zeroLiftDragCoefficient,
+      maxLiftCoefficient: maxLiftCoefficient ?? this.maxLiftCoefficient,
+      oswaldEfficiencyFactor:
+          oswaldEfficiencyFactor ?? this.oswaldEfficiencyFactor,
     );
   }
 
@@ -167,6 +206,16 @@ class AircraftEntity {
       batteryDescription: map['battery']?.toString() ?? '',
       createdAt: _toDateTime(map['created'], fallback: now),
       updatedAt: _toDateTime(map['updated'], fallback: now),
+      cruiseSpeedMs: _toDouble(map['cruiseSpeedMs'], fallback: 15.0),
+      zeroLiftDragCoefficient: _toDouble(
+        map['zeroLiftDragCoefficient'],
+        fallback: 0.030,
+      ),
+      maxLiftCoefficient: _toDouble(map['maxLiftCoefficient'], fallback: 1.4),
+      oswaldEfficiencyFactor: _toDouble(
+        map['oswaldEfficiencyFactor'],
+        fallback: 0.80,
+      ),
     );
   }
 
@@ -190,15 +239,20 @@ class AircraftEntity {
           : batteryDescription,
       'created': createdAt,
       'updated': updatedAt,
+      'cruiseSpeedMs': cruiseSpeedMs,
+      'zeroLiftDragCoefficient': zeroLiftDragCoefficient,
+      'maxLiftCoefficient': maxLiftCoefficient,
+      'oswaldEfficiencyFactor': oswaldEfficiencyFactor,
     };
   }
 
-  static double _toDouble(dynamic value) {
+  static double _toDouble(dynamic value, {double fallback = 0}) {
     if (value is num) {
       return value.toDouble();
     }
 
-    return double.tryParse(value?.toString().replaceAll(',', '.') ?? '') ?? 0;
+    return double.tryParse(value?.toString().replaceAll(',', '.') ?? '') ??
+        fallback;
   }
 
   static int _toInt(dynamic value, {int fallback = 0}) {
