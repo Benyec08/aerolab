@@ -36,6 +36,7 @@ import 'power_to_weight_service.dart';
 import 'thrust_service.dart';
 import 'recommendation_service.dart';
 import 'score_service.dart';
+import 'mission_power_service.dart';
 
 class AnalysisService {
   final _aspectRatioService = AspectRatioService();
@@ -50,6 +51,7 @@ class AnalysisService {
   final RiskService riskService = RiskService();
   final _recommendationService = RecommendationService();
   final _scoreService = ScoreService();
+  final _missionPowerService = MissionPowerService();
 
   AnalysisResult analyze(Aircraft aircraft, Environment environment) {
     const double flightSpeedMs = 15;
@@ -63,11 +65,6 @@ class AnalysisService {
             aircraft.wingAreaM2 > 0 &&
             aircraft.wingSpanM > 0);
 
-    // ISA basınç profili ve kullanıcının girdiği gerçek ortam
-    // sıcaklığı birlikte kullanılarak hava yoğunluğu hesaplanır.
-    //
-    // Böylece irtifa, lift, drag ve stall speed hesaplarını
-    // doğrudan etkiler.
     final double airDensity = airDensityService.calculateWithAltitude(
       altitudeM: environment.altitudeM,
       temperatureC: environment.temperatureC,
@@ -118,8 +115,6 @@ class AnalysisService {
       powerToWeight,
     );
 
-    // aircraft.motorPowerW toplam kurulu elektriksel motor gücü
-    // olarak kabul edilir. Motor sayısıyla tekrar çarpılmaz.
     final double estimatedThrust = _thrustService.calculate(
       totalElectricalPowerW: aircraft.motorPowerW,
       motorCount: aircraft.motorCount,
@@ -143,11 +138,23 @@ class AnalysisService {
           )
         : 0;
 
-    final double estimatedFlightTime = flightTimeService.calculateMinutes(
-      batteryCapacityMah: aircraft.batteryCapacityMah,
-      batteryVoltageV: aircraft.batteryVoltageV,
-      averagePowerConsumptionW: aircraft.motorPowerW * 0.65,
-    );
+    final MissionPowerResult missionPowerResult = _missionPowerService
+        .calculate(
+          aircraft: aircraft,
+          airDensityKgM3: airDensity,
+          flightSpeedMs: flightSpeedMs,
+          dragN: drag,
+        );
+
+    final FlightTimeResult flightTimeResult = flightTimeService
+        .calculateDetailed(
+          batteryCapacityMah: aircraft.batteryCapacityMah,
+          batteryVoltageV: aircraft.batteryVoltageV,
+          averagePowerConsumptionW: missionPowerResult.averageMissionPowerW,
+        );
+
+    final double estimatedFlightTime =
+        flightTimeResult.estimatedFlightTimeMinutes;
 
     final int riskScore = riskService.calculateRiskScore(
       windSpeedKmh: environment.windSpeedKmh,
@@ -202,16 +209,30 @@ class AnalysisService {
       aspectRatio: aspectRatio,
       powerToWeight: powerToWeight,
       estimatedThrustN: estimatedThrust,
+      missionPowerModelName: missionPowerResult.modelName,
+      hoverPowerW: missionPowerResult.hoverPowerW,
+      cruisePowerW: missionPowerResult.cruisePowerW,
+      averageMissionPowerW: missionPowerResult.averageMissionPowerW,
+      peakMissionPowerW: missionPowerResult.peakMissionPowerW,
+      peakPowerUsageRatio: missionPowerResult.peakPowerUsageRatio,
+      installedPowerReserveW: missionPowerResult.installedPowerReserveW,
+      installedPowerReservePercent:
+          missionPowerResult.installedPowerReservePercent,
+      hasSufficientInstalledPower:
+          missionPowerResult.hasSufficientInstalledPower,
+      averageBatteryCurrentA: flightTimeResult.estimatedAverageCurrentA,
+      nominalBatteryEnergyWh: flightTimeResult.nominalEnergyWh,
+      usableBatteryEnergyWh: flightTimeResult.effectiveEnergyWh,
       wingLoadingStatus: wingLoadingStatus,
       powerToWeightStatus: powerToWeightStatus,
       thrustToWeightStatus: thrustToWeightStatus,
-      riskScore: riskScore,
-      status: status,
-      recommendation: recommendation,
       aerodynamicScore: aerodynamicScore,
       propulsionScore: propulsionScore,
       energyScore: energyScore,
       overallScore: overallScore,
+      riskScore: riskScore,
+      status: status,
+      recommendation: recommendation,
     );
   }
 }

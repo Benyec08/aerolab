@@ -32,7 +32,9 @@ class AnalysisResultPage extends StatelessWidget {
                 _buildScoreSection(),
                 _buildAerodynamicSection(),
                 _buildPropulsionSection(),
+                _buildMissionPowerSection(),
                 _buildEnergySection(),
+                _buildPowerReserveSection(),
                 _buildRecommendationCard(),
               ],
             ),
@@ -238,7 +240,57 @@ class AnalysisResultPage extends StatelessWidget {
     );
   }
 
+  Widget _buildMissionPowerSection() {
+    final powerCards = <Widget>[
+      ResultCard(
+        title: 'Power Model',
+        value: _shortPowerModelName(result.missionPowerModelName),
+        color: const Color(0xFF0B3D91),
+      ),
+    ];
+
+    if (result.hoverPowerW > 0) {
+      powerCards.add(
+        ResultCard(
+          title: 'Hover Power',
+          value: '${result.hoverPowerW.toStringAsFixed(1)} W',
+        ),
+      );
+    }
+
+    if (result.cruisePowerW > 0) {
+      powerCards.add(
+        ResultCard(
+          title: 'Cruise Power',
+          value: '${result.cruisePowerW.toStringAsFixed(1)} W',
+        ),
+      );
+    }
+
+    powerCards.addAll([
+      ResultCard(
+        title: 'Average Mission Power',
+        value: '${result.averageMissionPowerW.toStringAsFixed(1)} W',
+      ),
+      ResultCard(
+        title: 'Peak Mission Power',
+        value: '${result.peakMissionPowerW.toStringAsFixed(1)} W',
+        color: _peakPowerColor(result.peakPowerUsageRatio),
+      ),
+    ]);
+
+    return ResultSection(
+      title: 'Mission Power Analysis',
+      icon: Icons.bolt,
+      child: _buildGrid(powerCards),
+    );
+  }
+
   Widget _buildEnergySection() {
+    final batteryUtilizationPercent = result.nominalBatteryEnergyWh > 0
+        ? (result.usableBatteryEnergyWh / result.nominalBatteryEnergyWh) * 100
+        : 0.0;
+
     return ResultSection(
       title: 'Energy & Endurance',
       icon: Icons.battery_charging_full,
@@ -246,6 +298,72 @@ class AnalysisResultPage extends StatelessWidget {
         ResultCard(
           title: 'Estimated Flight Time',
           value: '${result.estimatedFlightTime.toStringAsFixed(1)} dk',
+        ),
+        ResultCard(
+          title: 'Average Battery Current',
+          value: '${result.averageBatteryCurrentA.toStringAsFixed(1)} A',
+          color: _currentColor(result.averageBatteryCurrentA),
+        ),
+        ResultCard(
+          title: 'Nominal Battery Energy',
+          value: '${result.nominalBatteryEnergyWh.toStringAsFixed(1)} Wh',
+        ),
+        ResultCard(
+          title: 'Usable Battery Energy',
+          value: '${result.usableBatteryEnergyWh.toStringAsFixed(1)} Wh',
+        ),
+        ResultCard(
+          title: 'Battery Utilization',
+          value: '${batteryUtilizationPercent.toStringAsFixed(0)}%',
+          color: _batteryUtilizationColor(batteryUtilizationPercent),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildPowerReserveSection() {
+    final installedPowerW =
+        result.peakMissionPowerW + result.installedPowerReserveW;
+
+    final peakPowerUsagePercent = result.peakPowerUsageRatio * 100.0;
+
+    final reserveStatus = result.hasSufficientInstalledPower
+        ? _powerReserveStatus(result.installedPowerReservePercent)
+        : 'Yetersiz Güç';
+
+    return ResultSection(
+      title: 'Power Reserve',
+      icon: Icons.speed,
+      child: _buildGrid([
+        ResultCard(
+          title: 'Installed Motor Power',
+          value: '${installedPowerW.toStringAsFixed(1)} W',
+        ),
+        ResultCard(
+          title: 'Installed Power Reserve',
+          value:
+              '${result.installedPowerReserveW >= 0 ? '+' : ''}'
+              '${result.installedPowerReserveW.toStringAsFixed(1)} W',
+          color: result.hasSufficientInstalledPower ? Colors.green : Colors.red,
+        ),
+        ResultCard(
+          title: 'Power Reserve Ratio',
+          value: '${result.installedPowerReservePercent.toStringAsFixed(1)}%',
+          color: result.hasSufficientInstalledPower
+              ? _reservePercentColor(result.installedPowerReservePercent)
+              : Colors.red,
+        ),
+        ResultCard(
+          title: 'Peak Power Usage',
+          value: '${peakPowerUsagePercent.toStringAsFixed(1)}%',
+          color: _peakPowerColor(result.peakPowerUsageRatio),
+        ),
+        ResultCard(
+          title: 'Motor System Status',
+          value: reserveStatus,
+          color: result.hasSufficientInstalledPower
+              ? _reservePercentColor(result.installedPowerReservePercent)
+              : Colors.red,
         ),
       ]),
     );
@@ -324,6 +442,38 @@ class AnalysisResultPage extends StatelessWidget {
     return '★☆☆☆☆';
   }
 
+  String _shortPowerModelName(String modelName) {
+    if (modelName.contains('Multikopter')) {
+      return 'Multikopter Hover';
+    }
+
+    if (modelName.contains('Sabit Kanat')) {
+      return 'Sabit Kanat Seyir';
+    }
+
+    if (modelName.contains('VTOL')) {
+      return 'VTOL Karma Görev';
+    }
+
+    return modelName;
+  }
+
+  String _powerReserveStatus(double reservePercent) {
+    if (reservePercent >= 50) {
+      return 'Yüksek Güç Rezervi';
+    }
+
+    if (reservePercent >= 25) {
+      return 'İyi Güç Rezervi';
+    }
+
+    if (reservePercent >= 10) {
+      return 'Sınırlı Güç Rezervi';
+    }
+
+    return 'Kritik Güç Rezervi';
+  }
+
   Color _statusColor(String status) {
     if (status == 'Güvenli') {
       return Colors.green;
@@ -354,6 +504,54 @@ class AnalysisResultPage extends StatelessWidget {
     }
 
     if (status == 'Orta' || status == 'Yeterli' || status == 'Uygulanamaz') {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _peakPowerColor(double usageRatio) {
+    if (usageRatio <= 0.75) {
+      return Colors.green;
+    }
+
+    if (usageRatio <= 0.90) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _reservePercentColor(double reservePercent) {
+    if (reservePercent >= 25) {
+      return Colors.green;
+    }
+
+    if (reservePercent >= 10) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _batteryUtilizationColor(double utilizationPercent) {
+    if (utilizationPercent <= 85) {
+      return Colors.green;
+    }
+
+    if (utilizationPercent <= 90) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _currentColor(double currentA) {
+    if (currentA <= 30) {
+      return Colors.green;
+    }
+
+    if (currentA <= 60) {
       return Colors.orange;
     }
 
