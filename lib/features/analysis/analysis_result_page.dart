@@ -43,10 +43,10 @@ class AnalysisResultPage extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Uçuş Analiz Raporu',
           style: TextStyle(
             fontSize: 32,
@@ -54,17 +54,18 @@ class AnalysisResultPage extends StatelessWidget {
             color: Color(0xFF102A43),
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
-          'Aerodinamik performans, tahrik sistemi, enerji ve güvenlik değerlendirmesi',
-          style: TextStyle(fontSize: 15, color: Color(0xFF627D98)),
+          '${result.aircraftType} için uygulanabilir performans, '
+          'enerji ve güvenlik metrikleri',
+          style: const TextStyle(fontSize: 15, color: Color(0xFF627D98)),
         ),
       ],
     );
   }
 
   Widget _buildRiskCard() {
-    final Color statusColor = _statusColor(result.status);
+    final statusColor = _statusColor(result.status);
 
     return Container(
       width: double.infinity,
@@ -116,30 +117,63 @@ class AnalysisResultPage extends StatelessWidget {
   }
 
   Widget _buildScoreSection() {
-    return ResultSection(
-      title: 'Performance Score',
-      icon: Icons.query_stats,
-      child: _buildGrid([
+    final scoreCards = <Widget>[
+      if (result.aerodynamicScore != null)
         ResultCard(
           title: 'Aerodynamic Score',
           value: '${result.aerodynamicScore}/100',
-          color: _scoreColor(result.aerodynamicScore),
+          color: _scoreColor(result.aerodynamicScore!),
+        )
+      else
+        const ResultCard(
+          title: 'Aerodynamic Score',
+          value: 'Uygulanamaz',
+          color: Color(0xFF627D98),
         ),
-        ResultCard(
-          title: 'Propulsion Score',
-          value: '${result.propulsionScore}/100',
-          color: _scoreColor(result.propulsionScore),
-        ),
-        ResultCard(
-          title: 'Energy Score',
-          value: '${result.energyScore}/100',
-          color: _scoreColor(result.energyScore),
-        ),
-      ]),
+      ResultCard(
+        title: 'Propulsion Score',
+        value: '${result.propulsionScore}/100',
+        color: _scoreColor(result.propulsionScore),
+      ),
+      ResultCard(
+        title: 'Energy Score',
+        value: '${result.energyScore}/100',
+        color: _scoreColor(result.energyScore),
+      ),
+    ];
+
+    return ResultSection(
+      title: 'Performance Score',
+      icon: Icons.query_stats,
+      child: _buildGrid(scoreCards),
     );
   }
 
   Widget _buildAerodynamicSection() {
+    if (!result.hasFixedWingAerodynamics) {
+      return ResultSection(
+        title: 'Aerodynamic Performance',
+        icon: Icons.air,
+        child: _buildGrid(const [
+          ResultCard(
+            title: 'Fixed-Wing Lift Model',
+            value: 'Uygulanamaz',
+            color: Color(0xFF627D98),
+          ),
+          ResultCard(
+            title: 'Wing Loading',
+            value: 'Uygulanamaz',
+            color: Color(0xFF627D98),
+          ),
+          ResultCard(
+            title: 'Stall Speed',
+            value: 'Uygulanamaz',
+            color: Color(0xFF627D98),
+          ),
+        ]),
+      );
+    }
+
     return ResultSection(
       title: 'Aerodynamic Performance',
       icon: Icons.air,
@@ -265,14 +299,20 @@ class AnalysisResultPage extends StatelessWidget {
   }
 
   Widget _buildGrid(List<Widget> children) {
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 18,
-      mainAxisSpacing: 18,
-      childAspectRatio: 2.4,
-      children: children,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth >= 760 ? 3 : 1;
+
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 18,
+          mainAxisSpacing: 18,
+          childAspectRatio: crossAxisCount == 3 ? 2.4 : 3.2,
+          children: children,
+        );
+      },
     );
   }
 
@@ -313,7 +353,7 @@ class AnalysisResultPage extends StatelessWidget {
       return Colors.green;
     }
 
-    if (status == 'Orta' || status == 'Yeterli') {
+    if (status == 'Orta' || status == 'Yeterli' || status == 'Uygulanamaz') {
       return Colors.orange;
     }
 

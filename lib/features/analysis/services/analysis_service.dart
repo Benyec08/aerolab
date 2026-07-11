@@ -57,36 +57,57 @@ class AnalysisService {
     const double dragCoefficient = 0.045;
     const double clMax = 1.4;
 
-    final double airDensity = airDensityService.calculate(
+    final bool hasFixedWingAerodynamics =
+        aircraft.type == 'Sabit Kanat' ||
+        (aircraft.type == 'VTOL' &&
+            aircraft.wingAreaM2 > 0 &&
+            aircraft.wingSpanM > 0);
+
+    // ISA basınç profili ve kullanıcının girdiği gerçek ortam
+    // sıcaklığı birlikte kullanılarak hava yoğunluğu hesaplanır.
+    //
+    // Böylece irtifa, lift, drag ve stall speed hesaplarını
+    // doğrudan etkiler.
+    final double airDensity = airDensityService.calculateWithAltitude(
+      altitudeM: environment.altitudeM,
       temperatureC: environment.temperatureC,
-      pressureHpa: environment.pressureHpa,
     );
 
-    final double lift = liftService.calculate(
-      airDensity: airDensity,
-      velocityMs: flightSpeedMs,
-      wingAreaM2: aircraft.wingAreaM2,
-      liftCoefficient: liftCoefficient,
-    );
+    final double lift = hasFixedWingAerodynamics
+        ? liftService.calculate(
+            airDensity: airDensity,
+            velocityMs: flightSpeedMs,
+            wingAreaM2: aircraft.wingAreaM2,
+            liftCoefficient: liftCoefficient,
+          )
+        : 0;
 
-    final double drag = dragService.calculate(
-      airDensity: airDensity,
-      velocityMs: flightSpeedMs,
-      wingAreaM2: aircraft.wingAreaM2,
-      dragCoefficient: dragCoefficient,
-    );
+    final double drag = hasFixedWingAerodynamics
+        ? dragService.calculate(
+            airDensity: airDensity,
+            velocityMs: flightSpeedMs,
+            wingAreaM2: aircraft.wingAreaM2,
+            dragCoefficient: dragCoefficient,
+          )
+        : 0;
 
-    final double aspectRatio = _aspectRatioService.calculate(
-      wingSpanM: aircraft.wingSpanM,
-      wingAreaM2: aircraft.wingAreaM2,
-    );
+    final double aspectRatio = hasFixedWingAerodynamics
+        ? _aspectRatioService.calculate(
+            wingSpanM: aircraft.wingSpanM,
+            wingAreaM2: aircraft.wingAreaM2,
+          )
+        : 0;
 
-    final double wingLoading = _wingLoadingService.calculate(
-      weightKg: aircraft.weightKg,
-      wingAreaM2: aircraft.wingAreaM2,
-    );
+    final double wingLoading = hasFixedWingAerodynamics
+        ? _wingLoadingService.calculate(
+            weightKg: aircraft.weightKg,
+            wingAreaM2: aircraft.wingAreaM2,
+          )
+        : 0;
 
-    final String wingLoadingStatus = _wingLoadingService.evaluate(wingLoading);
+    final String wingLoadingStatus = hasFixedWingAerodynamics
+        ? _wingLoadingService.evaluate(wingLoading)
+        : 'Uygulanamaz';
 
     final double powerToWeight = _powerToWeightService.calculate(
       motorPowerW: aircraft.motorPowerW,
@@ -97,9 +118,13 @@ class AnalysisService {
       powerToWeight,
     );
 
+    // aircraft.motorPowerW toplam kurulu elektriksel motor gücü
+    // olarak kabul edilir. Motor sayısıyla tekrar çarpılmaz.
     final double estimatedThrust = _thrustService.calculate(
-      motorPowerW: aircraft.motorPowerW,
+      totalElectricalPowerW: aircraft.motorPowerW,
       motorCount: aircraft.motorCount,
+      propellerDiameterInch: aircraft.propellerDiameterInch,
+      airDensityKgM3: airDensity,
     );
 
     final double thrustToWeight = _thrustService.thrustToWeight(
@@ -109,12 +134,14 @@ class AnalysisService {
 
     final String thrustToWeightStatus = _thrustService.evaluate(thrustToWeight);
 
-    final double stallSpeed = stallService.calculate(
-      weightKg: aircraft.weightKg,
-      wingAreaM2: aircraft.wingAreaM2,
-      airDensity: airDensity,
-      clMax: clMax,
-    );
+    final double stallSpeed = hasFixedWingAerodynamics
+        ? stallService.calculate(
+            weightKg: aircraft.weightKg,
+            wingAreaM2: aircraft.wingAreaM2,
+            airDensity: airDensity,
+            clMax: clMax,
+          )
+        : 0;
 
     final double estimatedFlightTime = flightTimeService.calculateMinutes(
       batteryCapacityMah: aircraft.batteryCapacityMah,
@@ -125,6 +152,7 @@ class AnalysisService {
     final int riskScore = riskService.calculateRiskScore(
       windSpeedKmh: environment.windSpeedKmh,
       thrustToWeight: thrustToWeight,
+      evaluateFixedWingAerodynamics: hasFixedWingAerodynamics,
       wingLoading: wingLoading,
       flightSpeedMs: flightSpeedMs,
       stallSpeedMs: stallSpeed,
@@ -133,13 +161,16 @@ class AnalysisService {
     final String status = riskService.getStatus(riskScore);
 
     final String recommendation = _recommendationService.generate(
+      aircraftType: aircraft.type,
+      hasFixedWingAerodynamics: hasFixedWingAerodynamics,
       wingLoading: wingLoading,
       stallSpeed: stallSpeed,
       powerToWeight: powerToWeight,
       thrustToWeight: thrustToWeight,
     );
 
-    final int aerodynamicScore = _scoreService.aerodynamicScore(
+    final int? aerodynamicScore = _scoreService.aerodynamicScore(
+      isApplicable: hasFixedWingAerodynamics,
       wingLoading: wingLoading,
       stallSpeed: stallSpeed,
     );
@@ -160,6 +191,8 @@ class AnalysisService {
     );
 
     return AnalysisResult(
+      aircraftType: aircraft.type,
+      hasFixedWingAerodynamics: hasFixedWingAerodynamics,
       liftN: lift,
       dragN: drag,
       wingLoading: wingLoading,

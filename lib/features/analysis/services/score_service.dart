@@ -1,8 +1,13 @@
 class ScoreService {
-  int aerodynamicScore({
+  int? aerodynamicScore({
+    required bool isApplicable,
     required double wingLoading,
     required double stallSpeed,
   }) {
+    if (!isApplicable) {
+      return null;
+    }
+
     int score = 100;
 
     if (wingLoading > 8) {
@@ -56,11 +61,19 @@ class ScoreService {
   }
 
   int overallScore({
-    required int aerodynamicScore,
+    required int? aerodynamicScore,
     required int propulsionScore,
     required int energyScore,
   }) {
-    return ((aerodynamicScore + propulsionScore + energyScore) / 3).round();
+    final applicableScores = <int>[
+      propulsionScore,
+      energyScore,
+      ?aerodynamicScore,
+    ];
+
+    final total = applicableScores.fold<int>(0, (sum, score) => sum + score);
+
+    return (total / applicableScores.length).round();
   }
 
   int _clamp(int score) {

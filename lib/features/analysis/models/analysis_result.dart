@@ -1,4 +1,7 @@
 class AnalysisResult {
+  final String aircraftType;
+  final bool hasFixedWingAerodynamics;
+
   final double liftN;
   final double dragN;
   final double wingLoading;
@@ -12,7 +15,8 @@ class AnalysisResult {
   final String wingLoadingStatus;
   final String powerToWeightStatus;
   final String thrustToWeightStatus;
-  final int aerodynamicScore;
+
+  final int? aerodynamicScore;
   final int propulsionScore;
   final int energyScore;
   final int overallScore;
@@ -22,6 +26,8 @@ class AnalysisResult {
   final String recommendation;
 
   const AnalysisResult({
+    required this.aircraftType,
+    required this.hasFixedWingAerodynamics,
     required this.liftN,
     required this.dragN,
     required this.wingLoading,

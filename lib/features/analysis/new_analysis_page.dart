@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'analysis_result_page.dart';
 import 'models/aircraft.dart';
 import 'models/environment.dart';
+import 'services/air_density_service.dart';
 import 'services/analysis_service.dart';
 import 'services/battery_validation_service.dart';
 import 'widgets/analysis_section.dart';
@@ -29,10 +30,14 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
   late final TextEditingController _batteryCapacityController;
   late final TextEditingController _batteryVoltageController;
   late final TextEditingController _batteryCellController;
+  late final TextEditingController _altitudeController;
+  late final TextEditingController _temperatureController;
+  late final TextEditingController _humidityController;
   late final TextEditingController _windSpeedController;
 
   String _batteryType = 'LiPo';
   String _selectedAircraftType = 'Drone';
+  String _windDirection = 'Karşıdan';
 
   @override
   void initState() {
@@ -70,6 +75,9 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     _batteryCellController = TextEditingController(
       text: aircraft?.batteryCellCount.toString() ?? '4',
     );
+    _altitudeController = TextEditingController(text: '50');
+    _temperatureController = TextEditingController(text: '25');
+    _humidityController = TextEditingController(text: '40');
     _windSpeedController = TextEditingController(text: '12');
 
     final aircraftType = aircraft?.type;
@@ -99,6 +107,9 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     _batteryCapacityController.dispose();
     _batteryVoltageController.dispose();
     _batteryCellController.dispose();
+    _altitudeController.dispose();
+    _temperatureController.dispose();
+    _humidityController.dispose();
     _windSpeedController.dispose();
 
     super.dispose();
@@ -147,13 +158,22 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
       batteryCellCount: _toDouble(_batteryCellController).toInt(),
     );
 
+    final altitudeM = _toDouble(_altitudeController);
+    final temperatureC = _toDouble(_temperatureController);
+
+    // Basınç kullanıcıdan ayrı bir giriş olarak alınmıyor.
+    // Seçilen irtifadaki ISA standart basıncı otomatik hesaplanıyor.
+    final pressureHpa = AirDensityService().calculateIsaPressureHpa(
+      altitudeM: altitudeM,
+    );
+
     final environment = Environment(
-      altitudeM: 50,
-      temperatureC: 25,
-      pressureHpa: 1013,
-      humidityPercent: 40,
+      altitudeM: altitudeM,
+      temperatureC: temperatureC,
+      pressureHpa: pressureHpa,
+      humidityPercent: _toDouble(_humidityController),
       windSpeedKmh: _toDouble(_windSpeedController),
-      windDirection: 'Karşıdan',
+      windDirection: _windDirection,
     );
 
     final result = AnalysisService().analyze(aircraft, environment);
@@ -345,13 +365,81 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                       ),
 
                       AnalysisSection(
-                        title: 'Çevre',
+                        title: 'Çevre ve ISA Koşulları',
                         child: Column(
                           children: [
+                            _buildTextField(
+                              'İrtifa (m)',
+                              _altitudeController,
+                              allowZero: true,
+                              minimumValue: -500,
+                              maximumValue: 20000,
+                            ),
+                            _buildTextField(
+                              'Ortam Sıcaklığı (°C)',
+                              _temperatureController,
+                              allowNegative: true,
+                              minimumValue: -100,
+                              maximumValue: 100,
+                            ),
+                            _buildTextField(
+                              'Bağıl Nem (%)',
+                              _humidityController,
+                              allowZero: true,
+                              minimumValue: 0,
+                              maximumValue: 100,
+                            ),
                             _buildTextField(
                               'Rüzgâr Hızı (km/h)',
                               _windSpeedController,
                               allowZero: true,
+                              minimumValue: 0,
+                            ),
+                            DropdownButtonFormField<String>(
+                              key: ValueKey(_windDirection),
+                              initialValue: _windDirection,
+                              decoration: const InputDecoration(
+                                labelText: 'Rüzgâr Yönü',
+                                border: OutlineInputBorder(),
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'Karşıdan',
+                                  child: Text('Karşıdan'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Arkadan',
+                                  child: Text('Arkadan'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Soldan',
+                                  child: Text('Soldan'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Sağdan',
+                                  child: Text('Sağdan'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Sakin',
+                                  child: Text('Sakin'),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _windDirection = value ?? 'Karşıdan';
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Not: Atmosfer basıncı, seçilen irtifaya göre ISA modeliyle otomatik hesaplanır.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF627D98),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -387,7 +475,10 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     TextEditingController controller, {
     bool numeric = true,
     bool allowZero = false,
+    bool allowNegative = false,
     bool integerOnly = false,
+    double? minimumValue,
+    double? maximumValue,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
@@ -415,10 +506,18 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
             return '$label için geçerli bir sayı giriniz';
           }
 
-          if (allowZero ? number < 0 : number <= 0) {
+          if (!allowNegative && (allowZero ? number < 0 : number <= 0)) {
             return allowZero
                 ? '$label negatif olamaz'
                 : '$label sıfırdan büyük olmalıdır';
+          }
+
+          if (minimumValue != null && number < minimumValue) {
+            return '$label en az $minimumValue olmalıdır';
+          }
+
+          if (maximumValue != null && number > maximumValue) {
+            return '$label en fazla $maximumValue olmalıdır';
           }
 
           if (integerOnly && number != number.roundToDouble()) {

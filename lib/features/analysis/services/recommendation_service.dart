@@ -1,5 +1,7 @@
 class RecommendationService {
   String generate({
+    required String aircraftType,
+    required bool hasFixedWingAerodynamics,
     required double wingLoading,
     required double stallSpeed,
     required double powerToWeight,
@@ -7,17 +9,26 @@ class RecommendationService {
   }) {
     final recommendations = <String>[];
 
-    if (wingLoading < 6) {
-      recommendations.add('✓ Wing loading değeri ideal seviyede.');
-    } else {
-      recommendations.add('⚠ Wing loading yüksek. Kanat alanı artırılabilir.');
-    }
+    if (hasFixedWingAerodynamics) {
+      if (wingLoading < 6) {
+        recommendations.add('✓ Wing loading değeri ideal seviyede.');
+      } else {
+        recommendations.add(
+          '⚠ Wing loading yüksek. Kanat alanı artırılabilir.',
+        );
+      }
 
-    if (stallSpeed < 10) {
-      recommendations.add('✓ Stall hızı güvenli sınırlar içerisinde.');
+      if (stallSpeed < 10) {
+        recommendations.add('✓ Stall hızı güvenli sınırlar içerisinde.');
+      } else {
+        recommendations.add(
+          '⚠ Stall hızı yüksek. Düşük hız performansı iyileştirilebilir.',
+        );
+      }
     } else {
       recommendations.add(
-        '⚠ Stall hızı yüksek. Düşük hız performansı iyileştirilebilir.',
+        'ℹ $aircraftType için sabit kanat lift, wing loading ve stall '
+        'metrikleri uygulanmaz.',
       );
     }
 
@@ -28,7 +39,9 @@ class RecommendationService {
     }
 
     if (thrustToWeight > 2) {
-      recommendations.add('✓ Kalkış performansı oldukça güçlü.');
+      recommendations.add('✓ İtki / Ağırlık oranı güçlü.');
+    } else if (thrustToWeight >= 1.2) {
+      recommendations.add('✓ İtki / Ağırlık oranı yeterli.');
     } else {
       recommendations.add('⚠ İtki / Ağırlık oranı geliştirilebilir.');
     }
