@@ -29,6 +29,10 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
   // Motor sistemi
   late final TextEditingController _motorCountController;
   late final TextEditingController _motorPowerController;
+  late final TextEditingController _escEfficiencyController;
+  late final TextEditingController _motorEfficiencyController;
+  late final TextEditingController _continuousMotorPowerController;
+  late final TextEditingController _maximumMotorPowerController;
 
   // Batarya sistemi
   late final TextEditingController _batteryController;
@@ -81,6 +85,25 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
       text: aircraft?['motorPower']?.toString() ?? '',
     );
 
+    _escEfficiencyController = TextEditingController(
+      text: _efficiencyAsPercent(aircraft?['escEfficiency'], fallback: 0.95),
+    );
+
+    _motorEfficiencyController = TextEditingController(
+      text: _efficiencyAsPercent(aircraft?['motorEfficiency'], fallback: 0.85),
+    );
+
+    final existingMotorPower = aircraft?['motorPower']?.toString() ?? '';
+
+    _continuousMotorPowerController = TextEditingController(
+      text:
+          aircraft?['continuousMotorPowerW']?.toString() ?? existingMotorPower,
+    );
+
+    _maximumMotorPowerController = TextEditingController(
+      text: aircraft?['maximumMotorPowerW']?.toString() ?? existingMotorPower,
+    );
+
     _batteryController = TextEditingController(
       text: aircraft?['battery']?.toString() ?? '',
     );
@@ -120,6 +143,10 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     _wingSpanController.dispose();
     _motorCountController.dispose();
     _motorPowerController.dispose();
+    _escEfficiencyController.dispose();
+    _motorEfficiencyController.dispose();
+    _continuousMotorPowerController.dispose();
+    _maximumMotorPowerController.dispose();
     _batteryController.dispose();
     _batteryVoltageController.dispose();
     _batteryCapacityController.dispose();
@@ -179,6 +206,56 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     return null;
   }
 
+  String _efficiencyAsPercent(dynamic value, {required double fallback}) {
+    final parsedValue = value is num
+        ? value.toDouble()
+        : double.tryParse(value?.toString().replaceAll(',', '.') ?? '');
+
+    final efficiency = parsedValue ?? fallback;
+    final percent = efficiency <= 1.0 ? efficiency * 100.0 : efficiency;
+
+    return percent.toStringAsFixed(percent == percent.roundToDouble() ? 0 : 1);
+  }
+
+  String? _validateEfficiencyPercent(String? value, String fieldName) {
+    final validation = _validatePositiveNumber(value, fieldName);
+
+    if (validation != null) {
+      return validation;
+    }
+
+    final number = double.tryParse(value!.trim().replaceAll(',', '.'));
+
+    if (number == null || number <= 0 || number > 100) {
+      return '$fieldName 0 ile 100 arasında olmalıdır.';
+    }
+
+    return null;
+  }
+
+  String? _validateMaximumMotorPower(String? value) {
+    final validation = _validatePositiveNumber(value, 'Maksimum motor gücü');
+
+    if (validation != null) {
+      return validation;
+    }
+
+    final maximumPower = double.tryParse(value!.trim().replaceAll(',', '.'));
+    final continuousPower = double.tryParse(
+      _continuousMotorPowerController.text.trim().replaceAll(',', '.'),
+    );
+
+    if (maximumPower == null || continuousPower == null) {
+      return null;
+    }
+
+    if (maximumPower < continuousPower) {
+      return 'Maksimum güç, sürekli güçten küçük olamaz.';
+    }
+
+    return null;
+  }
+
   String? _validateBatteryVoltage(String? value) {
     final numberValidation = _validatePositiveNumber(value, 'Batarya voltajı');
 
@@ -230,6 +307,10 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     return _parseDouble(controller).toInt();
   }
 
+  double _parseEfficiency(TextEditingController controller) {
+    return _parseDouble(controller) / 100.0;
+  }
+
   void _submitForm() {
     final isValid = _formKey.currentState?.validate() ?? false;
 
@@ -250,6 +331,10 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
       'wingSpan': _parseDouble(_wingSpanController),
       'motorCount': _parseInt(_motorCountController),
       'motorPower': _parseDouble(_motorPowerController),
+      'escEfficiency': _parseEfficiency(_escEfficiencyController),
+      'motorEfficiency': _parseEfficiency(_motorEfficiencyController),
+      'continuousMotorPowerW': _parseDouble(_continuousMotorPowerController),
+      'maximumMotorPowerW': _parseDouble(_maximumMotorPowerController),
       'battery': batterySummary,
       'batteryType': _selectedBatteryType,
       'batteryVoltage': _parseDouble(_batteryVoltageController),
@@ -468,30 +553,120 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           textInputAction: TextInputAction.next,
           decoration: _inputDecoration(
-            label: 'Motor Gücü',
+            label: 'Kurulu Motor Gücü',
             hint: '1200',
             icon: Icons.electric_bolt_outlined,
             suffixText: 'W',
           ),
-          validator: (value) => _validatePositiveNumber(value, 'Motor gücü'),
+          validator: (value) =>
+              _validatePositiveNumber(value, 'Kurulu motor gücü'),
         );
+
+        final escEfficiencyField = TextFormField(
+          controller: _escEfficiencyController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.next,
+          decoration: _inputDecoration(
+            label: 'ESC Verimi',
+            hint: '95',
+            icon: Icons.speed_outlined,
+            suffixText: '%',
+          ),
+          validator: (value) => _validateEfficiencyPercent(value, 'ESC verimi'),
+        );
+
+        final motorEfficiencyField = TextFormField(
+          controller: _motorEfficiencyController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.next,
+          decoration: _inputDecoration(
+            label: 'Motor Verimi',
+            hint: '85',
+            icon: Icons.settings_outlined,
+            suffixText: '%',
+          ),
+          validator: (value) =>
+              _validateEfficiencyPercent(value, 'Motor verimi'),
+        );
+
+        final continuousPowerField = TextFormField(
+          controller: _continuousMotorPowerController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.next,
+          decoration: _inputDecoration(
+            label: 'Sürekli Motor Gücü',
+            hint: '1000',
+            icon: Icons.timeline_outlined,
+            suffixText: 'W',
+          ),
+          validator: (value) =>
+              _validatePositiveNumber(value, 'Sürekli motor gücü'),
+          onChanged: (_) {
+            _formKey.currentState?.validate();
+          },
+        );
+
+        final maximumPowerField = TextFormField(
+          controller: _maximumMotorPowerController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.next,
+          decoration: _inputDecoration(
+            label: 'Maksimum Motor Gücü',
+            hint: '1200',
+            icon: Icons.bolt_outlined,
+            suffixText: 'W',
+          ),
+          validator: _validateMaximumMotorPower,
+        );
+
+        final fields = <Widget>[
+          motorCountField,
+          motorPowerField,
+          escEfficiencyField,
+          motorEfficiencyField,
+          continuousPowerField,
+          maximumPowerField,
+        ];
 
         if (isNarrow) {
           return Column(
             children: [
-              motorCountField,
-              const SizedBox(height: 16),
-              motorPowerField,
+              for (var index = 0; index < fields.length; index++) ...[
+                fields[index],
+                if (index < fields.length - 1) const SizedBox(height: 16),
+              ],
             ],
           );
         }
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Column(
           children: [
-            Expanded(child: motorCountField),
-            const SizedBox(width: 16),
-            Expanded(child: motorPowerField),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: motorCountField),
+                const SizedBox(width: 16),
+                Expanded(child: motorPowerField),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: escEfficiencyField),
+                const SizedBox(width: 16),
+                Expanded(child: motorEfficiencyField),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: continuousPowerField),
+                const SizedBox(width: 16),
+                Expanded(child: maximumPowerField),
+              ],
+            ),
           ],
         );
       },

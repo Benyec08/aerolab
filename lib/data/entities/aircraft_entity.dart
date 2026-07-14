@@ -52,7 +52,7 @@ class AircraftEntity {
   @HiveField(15)
   final DateTime updatedAt;
 
-  // Sprint 10B-1
+  // Sprint 10B
   // Sabit kanat ve kanatlı VTOL araçları için aerodinamik girdiler.
   //
   // Varsayılan değerler, Sprint 10B öncesinde kaydedilmiş Hive
@@ -69,7 +69,30 @@ class AircraftEntity {
   @HiveField(19, defaultValue: 0.80)
   final double oswaldEfficiencyFactor;
 
-  const AircraftEntity({
+  // Sprint 11A
+  //
+  // Verim değerleri yüzde yerine 0–1 aralığında saklanır.
+  @HiveField(20, defaultValue: 0.95)
+  final double escEfficiency;
+
+  @HiveField(21, defaultValue: 0.85)
+  final double motorEfficiency;
+
+  /// Motor sisteminin güvenli biçimde sağlayabildiği toplam sürekli güç.
+  ///
+  /// Eski Hive kayıtlarında bu alan bulunmadığı için 0.0 okunabilir.
+  /// Constructor içindeki fallback sayesinde motorPowerW kullanılır.
+  @HiveField(22, defaultValue: 0.0)
+  final double continuousMotorPowerW;
+
+  /// Motor sisteminin kısa süreli sağlayabildiği toplam maksimum güç.
+  ///
+  /// Eski Hive kayıtlarında bu alan bulunmadığı için 0.0 okunabilir.
+  /// Constructor içindeki fallback sayesinde motorPowerW kullanılır.
+  @HiveField(23, defaultValue: 0.0)
+  final double maximumMotorPowerW;
+
+  AircraftEntity({
     required this.id,
     required this.name,
     required this.type,
@@ -90,7 +113,18 @@ class AircraftEntity {
     this.zeroLiftDragCoefficient = 0.030,
     this.maxLiftCoefficient = 1.4,
     this.oswaldEfficiencyFactor = 0.80,
-  });
+    this.escEfficiency = 0.95,
+    this.motorEfficiency = 0.85,
+    double? continuousMotorPowerW,
+    double? maximumMotorPowerW,
+  }) : continuousMotorPowerW =
+           continuousMotorPowerW == null || continuousMotorPowerW <= 0
+           ? motorPowerW
+           : continuousMotorPowerW,
+       maximumMotorPowerW =
+           maximumMotorPowerW == null || maximumMotorPowerW <= 0
+           ? motorPowerW
+           : maximumMotorPowerW;
 
   factory AircraftEntity.create({
     required String name,
@@ -110,6 +144,10 @@ class AircraftEntity {
     double zeroLiftDragCoefficient = 0.030,
     double maxLiftCoefficient = 1.4,
     double oswaldEfficiencyFactor = 0.80,
+    double escEfficiency = 0.95,
+    double motorEfficiency = 0.85,
+    double? continuousMotorPowerW,
+    double? maximumMotorPowerW,
   }) {
     final now = DateTime.now();
 
@@ -134,6 +172,10 @@ class AircraftEntity {
       zeroLiftDragCoefficient: zeroLiftDragCoefficient,
       maxLiftCoefficient: maxLiftCoefficient,
       oswaldEfficiencyFactor: oswaldEfficiencyFactor,
+      escEfficiency: escEfficiency,
+      motorEfficiency: motorEfficiency,
+      continuousMotorPowerW: continuousMotorPowerW,
+      maximumMotorPowerW: maximumMotorPowerW,
     );
   }
 
@@ -158,7 +200,13 @@ class AircraftEntity {
     double? zeroLiftDragCoefficient,
     double? maxLiftCoefficient,
     double? oswaldEfficiencyFactor,
+    double? escEfficiency,
+    double? motorEfficiency,
+    double? continuousMotorPowerW,
+    double? maximumMotorPowerW,
   }) {
+    final updatedMotorPowerW = motorPowerW ?? this.motorPowerW;
+
     return AircraftEntity(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -167,7 +215,7 @@ class AircraftEntity {
       wingAreaM2: wingAreaM2 ?? this.wingAreaM2,
       wingSpanM: wingSpanM ?? this.wingSpanM,
       motorCount: motorCount ?? this.motorCount,
-      motorPowerW: motorPowerW ?? this.motorPowerW,
+      motorPowerW: updatedMotorPowerW,
       propellerDiameterInch:
           propellerDiameterInch ?? this.propellerDiameterInch,
       batteryCapacityMah: batteryCapacityMah ?? this.batteryCapacityMah,
@@ -183,11 +231,17 @@ class AircraftEntity {
       maxLiftCoefficient: maxLiftCoefficient ?? this.maxLiftCoefficient,
       oswaldEfficiencyFactor:
           oswaldEfficiencyFactor ?? this.oswaldEfficiencyFactor,
+      escEfficiency: escEfficiency ?? this.escEfficiency,
+      motorEfficiency: motorEfficiency ?? this.motorEfficiency,
+      continuousMotorPowerW:
+          continuousMotorPowerW ?? this.continuousMotorPowerW,
+      maximumMotorPowerW: maximumMotorPowerW ?? this.maximumMotorPowerW,
     );
   }
 
   factory AircraftEntity.fromMap(Map<String, dynamic> map) {
     final now = DateTime.now();
+    final motorPowerW = _toDouble(map['motorPower']);
 
     return AircraftEntity(
       id: map['id']?.toString() ?? now.microsecondsSinceEpoch.toString(),
@@ -197,7 +251,7 @@ class AircraftEntity {
       wingAreaM2: _toDouble(map['wingArea']),
       wingSpanM: _toDouble(map['wingSpan']),
       motorCount: _toInt(map['motorCount'], fallback: 1),
-      motorPowerW: _toDouble(map['motorPower']),
+      motorPowerW: motorPowerW,
       propellerDiameterInch: _toDouble(map['propellerDiameter']),
       batteryCapacityMah: _toDouble(map['batteryCapacity']),
       batteryVoltageV: _toDouble(map['batteryVoltage']),
@@ -215,6 +269,16 @@ class AircraftEntity {
       oswaldEfficiencyFactor: _toDouble(
         map['oswaldEfficiencyFactor'],
         fallback: 0.80,
+      ),
+      escEfficiency: _toDouble(map['escEfficiency'], fallback: 0.95),
+      motorEfficiency: _toDouble(map['motorEfficiency'], fallback: 0.85),
+      continuousMotorPowerW: _toDouble(
+        map['continuousMotorPowerW'],
+        fallback: motorPowerW,
+      ),
+      maximumMotorPowerW: _toDouble(
+        map['maximumMotorPowerW'],
+        fallback: motorPowerW,
       ),
     );
   }
@@ -243,6 +307,10 @@ class AircraftEntity {
       'zeroLiftDragCoefficient': zeroLiftDragCoefficient,
       'maxLiftCoefficient': maxLiftCoefficient,
       'oswaldEfficiencyFactor': oswaldEfficiencyFactor,
+      'escEfficiency': escEfficiency,
+      'motorEfficiency': motorEfficiency,
+      'continuousMotorPowerW': continuousMotorPowerW,
+      'maximumMotorPowerW': maximumMotorPowerW,
     };
   }
 

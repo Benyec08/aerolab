@@ -43,13 +43,23 @@ class AircraftEntityAdapter extends TypeAdapter<AircraftEntity> {
       oswaldEfficiencyFactor: fields[19] == null
           ? 0.8
           : (fields[19] as num).toDouble(),
+      escEfficiency: fields[20] == null ? 0.95 : (fields[20] as num).toDouble(),
+      motorEfficiency: fields[21] == null
+          ? 0.85
+          : (fields[21] as num).toDouble(),
+      continuousMotorPowerW: fields[22] == null
+          ? 0.0
+          : (fields[22] as num?)?.toDouble(),
+      maximumMotorPowerW: fields[23] == null
+          ? 0.0
+          : (fields[23] as num?)?.toDouble(),
     );
   }
 
   @override
   void write(BinaryWriter writer, AircraftEntity obj) {
     writer
-      ..writeByte(20)
+      ..writeByte(24)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -89,7 +99,15 @@ class AircraftEntityAdapter extends TypeAdapter<AircraftEntity> {
       ..writeByte(18)
       ..write(obj.maxLiftCoefficient)
       ..writeByte(19)
-      ..write(obj.oswaldEfficiencyFactor);
+      ..write(obj.oswaldEfficiencyFactor)
+      ..writeByte(20)
+      ..write(obj.escEfficiency)
+      ..writeByte(21)
+      ..write(obj.motorEfficiency)
+      ..writeByte(22)
+      ..write(obj.continuousMotorPowerW)
+      ..writeByte(23)
+      ..write(obj.maximumMotorPowerW);
   }
 
   @override

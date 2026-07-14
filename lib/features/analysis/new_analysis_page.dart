@@ -26,6 +26,10 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
   late final TextEditingController _wingSpanController;
   late final TextEditingController _motorPowerController;
   late final TextEditingController _motorCountController;
+  late final TextEditingController _escEfficiencyController;
+  late final TextEditingController _motorEfficiencyController;
+  late final TextEditingController _continuousMotorPowerController;
+  late final TextEditingController _maximumMotorPowerController;
   late final TextEditingController _propellerDiameterController;
   late final TextEditingController _batteryCapacityController;
   late final TextEditingController _batteryVoltageController;
@@ -62,6 +66,24 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     );
     _motorCountController = TextEditingController(
       text: aircraft?.motorCount.toString() ?? '4',
+    );
+    _escEfficiencyController = TextEditingController(
+      text: ((aircraft?.escEfficiency ?? 0.95) * 100).toStringAsFixed(0),
+    );
+    _motorEfficiencyController = TextEditingController(
+      text: ((aircraft?.motorEfficiency ?? 0.85) * 100).toStringAsFixed(0),
+    );
+    _continuousMotorPowerController = TextEditingController(
+      text:
+          aircraft?.continuousMotorPowerW.toString() ??
+          aircraft?.motorPowerW.toString() ??
+          '850',
+    );
+    _maximumMotorPowerController = TextEditingController(
+      text:
+          aircraft?.maximumMotorPowerW.toString() ??
+          aircraft?.motorPowerW.toString() ??
+          '850',
     );
     _propellerDiameterController = TextEditingController(
       text: aircraft?.propellerDiameterInch.toString() ?? '10',
@@ -103,6 +125,10 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     _wingSpanController.dispose();
     _motorPowerController.dispose();
     _motorCountController.dispose();
+    _escEfficiencyController.dispose();
+    _motorEfficiencyController.dispose();
+    _continuousMotorPowerController.dispose();
+    _maximumMotorPowerController.dispose();
     _propellerDiameterController.dispose();
     _batteryCapacityController.dispose();
     _batteryVoltageController.dispose();
@@ -117,6 +143,33 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
 
   double _toDouble(TextEditingController controller) {
     return double.tryParse(controller.text.trim().replaceAll(',', '.')) ?? 0;
+  }
+
+  double _toEfficiency(TextEditingController controller) {
+    return _toDouble(controller) / 100.0;
+  }
+
+  String? _validateMaximumMotorPower(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Maksimum Motor Gücü (W) boş bırakılamaz';
+    }
+
+    final maximumPower = double.tryParse(value.trim().replaceAll(',', '.'));
+    final continuousPower = _toDouble(_continuousMotorPowerController);
+
+    if (maximumPower == null) {
+      return 'Maksimum Motor Gücü (W) için geçerli bir sayı giriniz';
+    }
+
+    if (maximumPower <= 0) {
+      return 'Maksimum Motor Gücü (W) sıfırdan büyük olmalıdır';
+    }
+
+    if (maximumPower < continuousPower) {
+      return 'Maksimum güç, sürekli güçten küçük olamaz';
+    }
+
+    return null;
   }
 
   void _startAnalysis() {
@@ -151,6 +204,10 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
       wingSpanM: _toDouble(_wingSpanController),
       motorCount: _toDouble(_motorCountController).toInt(),
       motorPowerW: _toDouble(_motorPowerController),
+      escEfficiency: _toEfficiency(_escEfficiencyController),
+      motorEfficiency: _toEfficiency(_motorEfficiencyController),
+      continuousMotorPowerW: _toDouble(_continuousMotorPowerController),
+      maximumMotorPowerW: _toDouble(_maximumMotorPowerController),
       propellerDiameterInch: _toDouble(_propellerDiameterController),
       batteryCapacityMah: _toDouble(_batteryCapacityController),
       batteryVoltageV: _toDouble(_batteryVoltageController),
@@ -295,17 +352,48 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                       ),
 
                       AnalysisSection(
-                        title: 'Motor',
+                        title: 'Motor ve Propulsion',
                         child: Column(
                           children: [
                             _buildTextField(
-                              'Motor Gücü (W)',
+                              'Kurulu Motor Gücü (W)',
                               _motorPowerController,
                             ),
                             _buildTextField(
                               'Motor Sayısı',
                               _motorCountController,
                               integerOnly: true,
+                            ),
+                            _buildTextField(
+                              'ESC Verimi (%)',
+                              _escEfficiencyController,
+                              minimumValue: 0.1,
+                              maximumValue: 100,
+                            ),
+                            _buildTextField(
+                              'Motor Verimi (%)',
+                              _motorEfficiencyController,
+                              minimumValue: 0.1,
+                              maximumValue: 100,
+                            ),
+                            _buildTextField(
+                              'Sürekli Motor Gücü (W)',
+                              _continuousMotorPowerController,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 18),
+                              child: TextFormField(
+                                controller: _maximumMotorPowerController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Maksimum Motor Gücü (W)',
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: _validateMaximumMotorPower,
+                              ),
                             ),
                             _buildTextField(
                               'Pervane Çapı (inch)',

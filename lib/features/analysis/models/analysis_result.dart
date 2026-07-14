@@ -41,6 +41,42 @@ class AnalysisResult {
   final double liftCoefficientUsageRatio;
   final bool isCruiseAerodynamicallyValid;
 
+  // Sprint 11
+  // Propulsion güç zinciri ve motor yük analizi sonuçları.
+
+  /// Ortalama görev gücü altında ESC çıkışındaki elektriksel güç.
+  final double escOutputPowerW;
+
+  /// Ortalama görev gücü altında motor milindeki mekanik güç.
+  final double motorShaftPowerW;
+
+  /// Ortalama görev gücü altında pervaneye aktarılan faydalı güç.
+  final double usefulPropulsivePowerW;
+
+  /// ESC, motor ve pervane toplam verimi.
+  ///
+  /// Değer 0–1 aralığındadır.
+  final double totalPropulsionEfficiency;
+
+  /// Ortalama görev gücünün sürekli motor gücüne oranı.
+  ///
+  /// Değer 0–1 aralığında olabilir; limit aşımında 1’den büyük olabilir.
+  final double averageContinuousLoadRatio;
+
+  /// Peak görev gücünün maksimum motor gücüne oranı.
+  ///
+  /// Değer 0–1 aralığında olabilir; limit aşımında 1’den büyük olabilir.
+  final double peakMaximumLoadRatio;
+
+  /// Sürekli motor gücü ile ortalama görev gücü arasındaki rezerv.
+  final double continuousPowerReserveW;
+
+  /// Maksimum motor gücü ile peak görev gücü arasındaki rezerv.
+  final double maximumPowerReserveW;
+
+  final bool isPropulsionSystemSafe;
+  final String propulsionSystemStatus;
+
   final String wingLoadingStatus;
   final String powerToWeightStatus;
   final String thrustToWeightStatus;
@@ -86,6 +122,16 @@ class AnalysisResult {
     required this.liftToDragRatio,
     required this.liftCoefficientUsageRatio,
     required this.isCruiseAerodynamicallyValid,
+    required this.escOutputPowerW,
+    required this.motorShaftPowerW,
+    required this.usefulPropulsivePowerW,
+    required this.totalPropulsionEfficiency,
+    required this.averageContinuousLoadRatio,
+    required this.peakMaximumLoadRatio,
+    required this.continuousPowerReserveW,
+    required this.maximumPowerReserveW,
+    required this.isPropulsionSystemSafe,
+    required this.propulsionSystemStatus,
     required this.wingLoadingStatus,
     required this.powerToWeightStatus,
     required this.thrustToWeightStatus,

@@ -256,30 +256,106 @@ class AnalysisResultPage extends StatelessWidget {
     return ResultSection(
       title: 'Propulsion System',
       icon: Icons.settings,
-      child: _buildGrid([
-        ResultCard(
-          title: 'Estimated Thrust',
-          value: '${result.estimatedThrustN.toStringAsFixed(2)} N',
-        ),
-        ResultCard(
-          title: 'Thrust / Weight',
-          value: result.thrustToWeight.toStringAsFixed(2),
-        ),
-        ResultCard(
-          title: 'Thrust Status',
-          value: result.thrustToWeightStatus,
-          color: _statusCardColor(result.thrustToWeightStatus),
-        ),
-        ResultCard(
-          title: 'Power / Weight',
-          value: '${result.powerToWeight.toStringAsFixed(1)} W/kg',
-        ),
-        ResultCard(
-          title: 'Power Status',
-          value: result.powerToWeightStatus,
-          color: _statusCardColor(result.powerToWeightStatus),
-        ),
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGrid([
+            ResultCard(
+              title: 'Estimated Thrust',
+              value: '${result.estimatedThrustN.toStringAsFixed(2)} N',
+            ),
+            ResultCard(
+              title: 'Thrust / Weight',
+              value: result.thrustToWeight.toStringAsFixed(2),
+            ),
+            ResultCard(
+              title: 'Thrust Status',
+              value: result.thrustToWeightStatus,
+              color: _statusCardColor(result.thrustToWeightStatus),
+            ),
+            ResultCard(
+              title: 'Power / Weight',
+              value: '${result.powerToWeight.toStringAsFixed(1)} W/kg',
+            ),
+            ResultCard(
+              title: 'Power Status',
+              value: result.powerToWeightStatus,
+              color: _statusCardColor(result.powerToWeightStatus),
+            ),
+          ]),
+          const SizedBox(height: 24),
+          const Text(
+            'Propulsion Power Chain',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF102A43),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _buildGrid([
+            ResultCard(
+              title: 'ESC Output Power',
+              value: '${result.escOutputPowerW.toStringAsFixed(1)} W',
+            ),
+            ResultCard(
+              title: 'Motor Shaft Power',
+              value: '${result.motorShaftPowerW.toStringAsFixed(1)} W',
+            ),
+            ResultCard(
+              title: 'Useful Propulsive Power',
+              value: '${result.usefulPropulsivePowerW.toStringAsFixed(1)} W',
+            ),
+            ResultCard(
+              title: 'Total Propulsion Efficiency',
+              value:
+                  '${(result.totalPropulsionEfficiency * 100).toStringAsFixed(1)}%',
+              color: _propulsionEfficiencyColor(
+                result.totalPropulsionEfficiency,
+              ),
+            ),
+          ]),
+          const SizedBox(height: 24),
+          const Text(
+            'Motor Load Analysis',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF102A43),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _buildGrid([
+            ResultCard(
+              title: 'Average Continuous Load',
+              value:
+                  '${(result.averageContinuousLoadRatio * 100).toStringAsFixed(1)}%',
+              color: _motorLoadColor(result.averageContinuousLoadRatio),
+            ),
+            ResultCard(
+              title: 'Peak Maximum Load',
+              value:
+                  '${(result.peakMaximumLoadRatio * 100).toStringAsFixed(1)}%',
+              color: _motorLoadColor(result.peakMaximumLoadRatio),
+            ),
+            ResultCard(
+              title: 'Continuous Power Reserve',
+              value: '${result.continuousPowerReserveW.toStringAsFixed(1)} W',
+              color: _powerReserveWColor(result.continuousPowerReserveW),
+            ),
+            ResultCard(
+              title: 'Maximum Power Reserve',
+              value: '${result.maximumPowerReserveW.toStringAsFixed(1)} W',
+              color: _powerReserveWColor(result.maximumPowerReserveW),
+            ),
+            ResultCard(
+              title: 'Propulsion System Status',
+              value: result.propulsionSystemStatus,
+              color: result.isPropulsionSystemSafe ? Colors.green : Colors.red,
+            ),
+          ]),
+        ],
+      ),
     );
   }
 
@@ -571,6 +647,42 @@ class AnalysisResultPage extends StatelessWidget {
     }
 
     if (usageRatio <= 0.90) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _propulsionEfficiencyColor(double efficiency) {
+    if (efficiency >= 0.60) {
+      return Colors.green;
+    }
+
+    if (efficiency >= 0.45) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _motorLoadColor(double loadRatio) {
+    if (loadRatio <= 0.70) {
+      return Colors.green;
+    }
+
+    if (loadRatio <= 0.90) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _powerReserveWColor(double reserveW) {
+    if (reserveW > 0) {
+      return Colors.green;
+    }
+
+    if (reserveW == 0) {
       return Colors.orange;
     }
 

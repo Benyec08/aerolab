@@ -22,6 +22,10 @@ class AircraftMapper {
       zeroLiftDragCoefficient: entity.zeroLiftDragCoefficient,
       maxLiftCoefficient: entity.maxLiftCoefficient,
       oswaldEfficiencyFactor: entity.oswaldEfficiencyFactor,
+      escEfficiency: entity.escEfficiency,
+      motorEfficiency: entity.motorEfficiency,
+      continuousMotorPowerW: entity.continuousMotorPowerW,
+      maximumMotorPowerW: entity.maximumMotorPowerW,
     );
   }
 
@@ -54,6 +58,10 @@ class AircraftMapper {
       zeroLiftDragCoefficient: model.zeroLiftDragCoefficient,
       maxLiftCoefficient: model.maxLiftCoefficient,
       oswaldEfficiencyFactor: model.oswaldEfficiencyFactor,
+      escEfficiency: model.escEfficiency,
+      motorEfficiency: model.motorEfficiency,
+      continuousMotorPowerW: model.continuousMotorPowerW,
+      maximumMotorPowerW: model.maximumMotorPowerW,
     );
   }
 }

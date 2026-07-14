@@ -36,6 +36,7 @@ import 'recommendation_service.dart';
 import 'score_service.dart';
 import 'mission_power_service.dart';
 import 'aerodynamic_performance_service.dart';
+import 'propulsion_system_service.dart';
 
 class AnalysisService {
   final _aspectRatioService = AspectRatioService();
@@ -50,6 +51,7 @@ class AnalysisService {
   final _scoreService = ScoreService();
   final _missionPowerService = MissionPowerService();
   final _aerodynamicPerformanceService = AerodynamicPerformanceService();
+  final _propulsionSystemService = PropulsionSystemService();
 
   AnalysisResult analyze(Aircraft aircraft, Environment environment) {
     final bool hasFixedWingAerodynamics =
@@ -158,13 +160,51 @@ class AnalysisService {
           airDensityKgM3: airDensity,
           flightSpeedMs: cruiseSpeedMs,
           dragN: drag,
+          motorEfficiency: aircraft.motorEfficiency,
+          propellerEfficiency: MissionPowerService.defaultPropellerEfficiency,
         );
+
+    // MissionPowerService motor girişindeki elektriksel gücü hesaplar.
+    // Bataryadan çekilen gerçek gücü bulmak için ESC kaybı da eklenir.
+    final double batteryHoverPowerW =
+        missionPowerResult.hoverPowerW / aircraft.escEfficiency;
+
+    final double batteryCruisePowerW =
+        missionPowerResult.cruisePowerW / aircraft.escEfficiency;
+
+    final double batteryAverageMissionPowerW =
+        missionPowerResult.averageMissionPowerW / aircraft.escEfficiency;
+
+    final double batteryPeakMissionPowerW =
+        missionPowerResult.peakMissionPowerW / aircraft.escEfficiency;
+
+    final double peakPowerUsageRatio =
+        batteryPeakMissionPowerW / aircraft.motorPowerW;
+
+    final double installedPowerReserveW =
+        aircraft.motorPowerW - batteryPeakMissionPowerW;
+
+    final double installedPowerReservePercent =
+        installedPowerReserveW / aircraft.motorPowerW * 100;
+
+    final bool hasSufficientInstalledPower =
+        batteryPeakMissionPowerW <= aircraft.motorPowerW;
+
+    final propulsionSystemResult = _propulsionSystemService.calculate(
+      averageMissionPowerW: batteryAverageMissionPowerW,
+      peakMissionPowerW: batteryPeakMissionPowerW,
+      escEfficiency: aircraft.escEfficiency,
+      motorEfficiency: aircraft.motorEfficiency,
+      propellerEfficiency: MissionPowerService.defaultPropellerEfficiency,
+      continuousMotorPowerW: aircraft.continuousMotorPowerW,
+      maximumMotorPowerW: aircraft.maximumMotorPowerW,
+    );
 
     final FlightTimeResult flightTimeResult = flightTimeService
         .calculateDetailed(
           batteryCapacityMah: aircraft.batteryCapacityMah,
           batteryVoltageV: aircraft.batteryVoltageV,
-          averagePowerConsumptionW: missionPowerResult.averageMissionPowerW,
+          averagePowerConsumptionW: batteryAverageMissionPowerW,
         );
 
     final double estimatedFlightTime =
@@ -224,16 +264,14 @@ class AnalysisService {
       powerToWeight: powerToWeight,
       estimatedThrustN: estimatedThrust,
       missionPowerModelName: missionPowerResult.modelName,
-      hoverPowerW: missionPowerResult.hoverPowerW,
-      cruisePowerW: missionPowerResult.cruisePowerW,
-      averageMissionPowerW: missionPowerResult.averageMissionPowerW,
-      peakMissionPowerW: missionPowerResult.peakMissionPowerW,
-      peakPowerUsageRatio: missionPowerResult.peakPowerUsageRatio,
-      installedPowerReserveW: missionPowerResult.installedPowerReserveW,
-      installedPowerReservePercent:
-          missionPowerResult.installedPowerReservePercent,
-      hasSufficientInstalledPower:
-          missionPowerResult.hasSufficientInstalledPower,
+      hoverPowerW: batteryHoverPowerW,
+      cruisePowerW: batteryCruisePowerW,
+      averageMissionPowerW: batteryAverageMissionPowerW,
+      peakMissionPowerW: batteryPeakMissionPowerW,
+      peakPowerUsageRatio: peakPowerUsageRatio,
+      installedPowerReserveW: installedPowerReserveW,
+      installedPowerReservePercent: installedPowerReservePercent,
+      hasSufficientInstalledPower: hasSufficientInstalledPower,
       averageBatteryCurrentA: flightTimeResult.estimatedAverageCurrentA,
       nominalBatteryEnergyWh: flightTimeResult.nominalEnergyWh,
       usableBatteryEnergyWh: flightTimeResult.effectiveEnergyWh,
@@ -245,6 +283,23 @@ class AnalysisService {
       liftToDragRatio: liftToDragRatio,
       liftCoefficientUsageRatio: liftCoefficientUsageRatio,
       isCruiseAerodynamicallyValid: isCruiseAerodynamicallyValid,
+      escOutputPowerW: propulsionSystemResult.averagePowerChain.escOutputPowerW,
+      motorShaftPowerW:
+          propulsionSystemResult.averagePowerChain.motorShaftPowerW,
+      usefulPropulsivePowerW:
+          propulsionSystemResult.averagePowerChain.usefulPropulsivePowerW,
+      totalPropulsionEfficiency:
+          propulsionSystemResult.totalPropulsionEfficiency,
+      averageContinuousLoadRatio:
+          propulsionSystemResult.loadAnalysis.averageContinuousLoadRatio,
+      peakMaximumLoadRatio:
+          propulsionSystemResult.loadAnalysis.peakMaximumLoadRatio,
+      continuousPowerReserveW:
+          propulsionSystemResult.loadAnalysis.continuousPowerReserveW,
+      maximumPowerReserveW:
+          propulsionSystemResult.loadAnalysis.maximumPowerReserveW,
+      isPropulsionSystemSafe: propulsionSystemResult.status.isSafe,
+      propulsionSystemStatus: propulsionSystemResult.status.label,
       wingLoadingStatus: wingLoadingStatus,
       powerToWeightStatus: powerToWeightStatus,
       thrustToWeightStatus: thrustToWeightStatus,
