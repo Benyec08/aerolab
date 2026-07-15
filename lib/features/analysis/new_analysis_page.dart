@@ -5,6 +5,7 @@ import 'models/aircraft.dart';
 import 'models/environment.dart';
 import 'services/air_density_service.dart';
 import 'services/analysis_service.dart';
+import 'services/battery_chemistry_service.dart';
 import 'services/battery_validation_service.dart';
 import 'widgets/analysis_section.dart';
 
@@ -19,6 +20,8 @@ class NewAnalysisPage extends StatefulWidget {
 
 class _NewAnalysisPageState extends State<NewAnalysisPage> {
   final _formKey = GlobalKey<FormState>();
+  final BatteryChemistryService _batteryChemistryService =
+      BatteryChemistryService();
 
   late final TextEditingController _nameController;
   late final TextEditingController _weightController;
@@ -34,6 +37,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
   late final TextEditingController _batteryCapacityController;
   late final TextEditingController _batteryVoltageController;
   late final TextEditingController _batteryCellController;
+  late final TextEditingController _cellInternalResistanceController;
   late final TextEditingController _altitudeController;
   late final TextEditingController _temperatureController;
   late final TextEditingController _humidityController;
@@ -48,6 +52,13 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     super.initState();
 
     final aircraft = widget.initialAircraft;
+
+    final batteryType = aircraft?.batteryType;
+    if (batteryType == 'LiPo' ||
+        batteryType == 'Li-Ion' ||
+        batteryType == 'LiHV') {
+      _batteryType = batteryType!;
+    }
 
     _nameController = TextEditingController(
       text: aircraft?.name ?? 'Eğitim Drone V1',
@@ -97,6 +108,11 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     _batteryCellController = TextEditingController(
       text: aircraft?.batteryCellCount.toString() ?? '4',
     );
+    _cellInternalResistanceController = TextEditingController(
+      text:
+          aircraft?.cellInternalResistanceMilliOhm.toString() ??
+          _defaultCellInternalResistanceMilliOhm(_batteryType).toString(),
+    );
     _altitudeController = TextEditingController(text: '50');
     _temperatureController = TextEditingController(text: '25');
     _humidityController = TextEditingController(text: '40');
@@ -107,13 +123,6 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
         aircraftType == 'Sabit Kanat' ||
         aircraftType == 'VTOL') {
       _selectedAircraftType = aircraftType!;
-    }
-
-    final batteryType = aircraft?.batteryType;
-    if (batteryType == 'LiPo' ||
-        batteryType == 'Li-Ion' ||
-        batteryType == 'LiHV') {
-      _batteryType = batteryType!;
     }
   }
 
@@ -133,6 +142,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     _batteryCapacityController.dispose();
     _batteryVoltageController.dispose();
     _batteryCellController.dispose();
+    _cellInternalResistanceController.dispose();
     _altitudeController.dispose();
     _temperatureController.dispose();
     _humidityController.dispose();
@@ -147,6 +157,17 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
 
   double _toEfficiency(TextEditingController controller) {
     return _toDouble(controller) / 100.0;
+  }
+
+  double _defaultCellInternalResistanceMilliOhm(String batteryType) {
+    return _batteryChemistryService
+        .getProfile(batteryType)
+        .defaultCellInternalResistanceMilliOhm;
+  }
+
+  void _applyBatteryChemistryDefault(String batteryType) {
+    _cellInternalResistanceController.text =
+        _defaultCellInternalResistanceMilliOhm(batteryType).toString();
   }
 
   String? _validateMaximumMotorPower(String? value) {
@@ -213,6 +234,9 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
       batteryVoltageV: _toDouble(_batteryVoltageController),
       batteryType: _batteryType,
       batteryCellCount: _toDouble(_batteryCellController).toInt(),
+      cellInternalResistanceMilliOhm: _toDouble(
+        _cellInternalResistanceController,
+      ),
     );
 
     final altitudeM = _toDouble(_altitudeController);
@@ -429,8 +453,10 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                                 ),
                               ],
                               onChanged: (value) {
+                                final selectedType = value ?? 'LiPo';
                                 setState(() {
-                                  _batteryType = value ?? 'LiPo';
+                                  _batteryType = selectedType;
+                                  _applyBatteryChemistryDefault(selectedType);
                                 });
                               },
                             ),
@@ -447,6 +473,11 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                               'Hücre Sayısı (S)',
                               _batteryCellController,
                               integerOnly: true,
+                            ),
+                            _buildTextField(
+                              'Hücre İç Direnci (mΩ/hücre)',
+                              _cellInternalResistanceController,
+                              minimumValue: 0.1,
                             ),
                           ],
                         ),

@@ -26,7 +26,6 @@ import '../models/analysis_result.dart';
 
 import 'air_density_service.dart';
 import 'stall_service.dart';
-import 'flight_time_service.dart';
 import 'risk_service.dart';
 import 'aspect_ratio_service.dart';
 import 'wing_loading_service.dart';
@@ -37,6 +36,9 @@ import 'score_service.dart';
 import 'mission_power_service.dart';
 import 'aerodynamic_performance_service.dart';
 import 'propulsion_system_service.dart';
+import 'battery_recommendation_service.dart';
+import 'battery_score_service.dart';
+import 'battery_system_service.dart';
 
 class AnalysisService {
   final _aspectRatioService = AspectRatioService();
@@ -45,13 +47,15 @@ class AnalysisService {
   final _thrustService = ThrustService();
   final AirDensityService airDensityService = AirDensityService();
   final StallService stallService = StallService();
-  final FlightTimeService flightTimeService = FlightTimeService();
   final RiskService riskService = RiskService();
   final _recommendationService = RecommendationService();
   final _scoreService = ScoreService();
   final _missionPowerService = MissionPowerService();
   final _aerodynamicPerformanceService = AerodynamicPerformanceService();
   final _propulsionSystemService = PropulsionSystemService();
+  final _batterySystemService = BatterySystemService();
+  final _batteryScoreService = BatteryScoreService();
+  final _batteryRecommendationService = BatteryRecommendationService();
 
   AnalysisResult analyze(Aircraft aircraft, Environment environment) {
     final bool hasFixedWingAerodynamics =
@@ -200,15 +204,26 @@ class AnalysisService {
       maximumMotorPowerW: aircraft.maximumMotorPowerW,
     );
 
-    final FlightTimeResult flightTimeResult = flightTimeService
-        .calculateDetailed(
-          batteryCapacityMah: aircraft.batteryCapacityMah,
-          batteryVoltageV: aircraft.batteryVoltageV,
-          averagePowerConsumptionW: batteryAverageMissionPowerW,
-        );
+    final batterySystemResult = _batterySystemService.calculate(
+      batteryType: aircraft.batteryType,
+      cellCount: aircraft.batteryCellCount,
+      capacityMah: aircraft.batteryCapacityMah,
+      cellInternalResistanceMilliOhm: aircraft.cellInternalResistanceMilliOhm,
+      averageMissionPowerW: batteryAverageMissionPowerW,
+      peakMissionPowerW: batteryPeakMissionPowerW,
+    );
 
     final double estimatedFlightTime =
-        flightTimeResult.estimatedFlightTimeMinutes;
+        batterySystemResult.estimatedFlightTimeMinutes;
+
+    final batteryScoreResult = _batteryScoreService.calculate(
+      batterySystemResult: batterySystemResult,
+    );
+
+    final batteryRecommendationResult = _batteryRecommendationService.generate(
+      batterySystemResult: batterySystemResult,
+      batteryScoreResult: batteryScoreResult,
+    );
 
     final int riskScore = riskService.calculateRiskScore(
       windSpeedKmh: environment.windSpeedKmh,
@@ -272,9 +287,10 @@ class AnalysisService {
       installedPowerReserveW: installedPowerReserveW,
       installedPowerReservePercent: installedPowerReservePercent,
       hasSufficientInstalledPower: hasSufficientInstalledPower,
-      averageBatteryCurrentA: flightTimeResult.estimatedAverageCurrentA,
-      nominalBatteryEnergyWh: flightTimeResult.nominalEnergyWh,
-      usableBatteryEnergyWh: flightTimeResult.effectiveEnergyWh,
+      averageBatteryCurrentA:
+          batterySystemResult.averageElectricalResult.currentA,
+      nominalBatteryEnergyWh: batterySystemResult.nominalEnergyWh,
+      usableBatteryEnergyWh: batterySystemResult.realUsableEnergyWh,
       cruiseSpeedMs: cruiseSpeedMs,
       dynamicPressurePa: dynamicPressurePa,
       requiredLiftCoefficient: requiredLiftCoefficient,
@@ -300,6 +316,29 @@ class AnalysisService {
           propulsionSystemResult.loadAnalysis.maximumPowerReserveW,
       isPropulsionSystemSafe: propulsionSystemResult.status.isSafe,
       propulsionSystemStatus: propulsionSystemResult.status.label,
+      fullPackVoltageV: batterySystemResult.fullPackVoltageV,
+      nominalPackVoltageV: batterySystemResult.nominalPackVoltageV,
+      minimumSafePackVoltageV: batterySystemResult.minimumSafePackVoltageV,
+      packInternalResistanceOhm: batterySystemResult.packInternalResistanceOhm,
+      averageLoadedVoltageV:
+          batterySystemResult.averageElectricalResult.loadedVoltageV,
+      peakLoadedVoltageV:
+          batterySystemResult.peakElectricalResult.loadedVoltageV,
+      averageVoltageSagV:
+          batterySystemResult.averageElectricalResult.voltageSagV,
+      peakVoltageSagV: batterySystemResult.peakElectricalResult.voltageSagV,
+      peakBatteryCurrentA: batterySystemResult.peakElectricalResult.currentA,
+      averageCRate: batterySystemResult.averageElectricalResult.cRate,
+      peakCRate: batterySystemResult.peakElectricalResult.cRate,
+      batteryLoadEfficiency: batterySystemResult.loadEfficiencyFactor,
+      isBatterySystemSafe: batterySystemResult.status.isSafe,
+      batterySystemStatus: batterySystemResult.status.label,
+      batteryScore: batteryScoreResult.score,
+      batteryScoreStatus: batteryScoreResult.status.label,
+      batterySafetyMessage: batteryScoreResult.safetyMessage,
+      batteryRecommendationTitle: batteryRecommendationResult.title,
+      batteryRecommendationMessage: batteryRecommendationResult.message,
+      isBatteryRecommendationSafe: batteryRecommendationResult.severity.isSafe,
       wingLoadingStatus: wingLoadingStatus,
       powerToWeightStatus: powerToWeightStatus,
       thrustToWeightStatus: thrustToWeightStatus,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../analysis/services/battery_chemistry_service.dart';
 import '../analysis/services/battery_validation_service.dart';
 
 class AircraftFormDialog extends StatefulWidget {
@@ -17,6 +18,8 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final BatteryValidationService _batteryValidationService =
       BatteryValidationService();
+  final BatteryChemistryService _batteryChemistryService =
+      BatteryChemistryService();
 
   // Genel bilgiler
   late final TextEditingController _nameController;
@@ -39,6 +42,7 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
   late final TextEditingController _batteryVoltageController;
   late final TextEditingController _batteryCapacityController;
   late final TextEditingController _batteryCellController;
+  late final TextEditingController _cellInternalResistanceController;
 
   // Pervane sistemi
   late final TextEditingController _propellerDiameterController;
@@ -60,6 +64,16 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     super.initState();
 
     final aircraft = widget.aircraft;
+
+    final existingType = aircraft?['type']?.toString();
+    _selectedType = _aircraftTypes.contains(existingType)
+        ? existingType!
+        : 'Sabit Kanat';
+
+    final existingBatteryType = aircraft?['batteryType']?.toString();
+    _selectedBatteryType = _batteryTypes.contains(existingBatteryType)
+        ? existingBatteryType!
+        : 'LiPo';
 
     _nameController = TextEditingController(
       text: aircraft?['name']?.toString() ?? '',
@@ -120,19 +134,21 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
       text: aircraft?['batteryCellCount']?.toString() ?? '',
     );
 
+    final storedInternalResistance = _toOptionalPositiveDouble(
+      aircraft?['cellInternalResistanceMilliOhm'],
+    );
+
+    _cellInternalResistanceController = TextEditingController(
+      text:
+          storedInternalResistance?.toString() ??
+          _defaultCellInternalResistanceMilliOhm(
+            _selectedBatteryType,
+          ).toString(),
+    );
+
     _propellerDiameterController = TextEditingController(
       text: aircraft?['propellerDiameter']?.toString() ?? '',
     );
-
-    final existingType = aircraft?['type']?.toString();
-    _selectedType = _aircraftTypes.contains(existingType)
-        ? existingType!
-        : 'Sabit Kanat';
-
-    final existingBatteryType = aircraft?['batteryType']?.toString();
-    _selectedBatteryType = _batteryTypes.contains(existingBatteryType)
-        ? existingBatteryType!
-        : 'LiPo';
   }
 
   @override
@@ -151,6 +167,7 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     _batteryVoltageController.dispose();
     _batteryCapacityController.dispose();
     _batteryCellController.dispose();
+    _cellInternalResistanceController.dispose();
     _propellerDiameterController.dispose();
     super.dispose();
   }
@@ -204,6 +221,29 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     }
 
     return null;
+  }
+
+  double? _toOptionalPositiveDouble(dynamic value) {
+    final parsedValue = value is num
+        ? value.toDouble()
+        : double.tryParse(value?.toString().replaceAll(',', '.') ?? '');
+
+    if (parsedValue == null || parsedValue <= 0) {
+      return null;
+    }
+
+    return parsedValue;
+  }
+
+  double _defaultCellInternalResistanceMilliOhm(String batteryType) {
+    return _batteryChemistryService
+        .getProfile(batteryType)
+        .defaultCellInternalResistanceMilliOhm;
+  }
+
+  void _applyBatteryChemistryDefault(String batteryType) {
+    _cellInternalResistanceController.text =
+        _defaultCellInternalResistanceMilliOhm(batteryType).toString();
   }
 
   String _efficiencyAsPercent(dynamic value, {required double fallback}) {
@@ -340,6 +380,9 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
       'batteryVoltage': _parseDouble(_batteryVoltageController),
       'batteryCapacity': _parseDouble(_batteryCapacityController),
       'batteryCellCount': batteryCellCount,
+      'cellInternalResistanceMilliOhm': _parseDouble(
+        _cellInternalResistanceController,
+      ),
       'propellerDiameter': _parseDouble(_propellerDiameterController),
       'created': widget.aircraft?['created'] as DateTime? ?? DateTime.now(),
     };
@@ -694,6 +737,7 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
             if (value != null) {
               setState(() {
                 _selectedBatteryType = value;
+                _applyBatteryChemistryDefault(value);
               });
               _formKey.currentState?.validate();
             }
@@ -743,6 +787,20 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
               _validatePositiveNumber(value, 'Batarya kapasitesi'),
         );
 
+        final cellInternalResistanceField = TextFormField(
+          controller: _cellInternalResistanceController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.next,
+          decoration: _inputDecoration(
+            label: 'Hücre İç Direnci',
+            hint: '4.0',
+            icon: Icons.electrical_services_outlined,
+            suffixText: 'mΩ/hücre',
+          ),
+          validator: (value) =>
+              _validatePositiveNumber(value, 'Hücre iç direnci'),
+        );
+
         final batteryDescriptionField = TextFormField(
           controller: _batteryController,
           textInputAction: TextInputAction.next,
@@ -763,6 +821,8 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
               batteryVoltageField,
               const SizedBox(height: 16),
               batteryCapacityField,
+              const SizedBox(height: 16),
+              cellInternalResistanceField,
               const SizedBox(height: 16),
               batteryDescriptionField,
             ],
@@ -786,6 +846,15 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
                 Expanded(child: batteryVoltageField),
                 const SizedBox(width: 16),
                 Expanded(child: batteryCapacityField),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: cellInternalResistanceField),
+                const SizedBox(width: 16),
+                const Expanded(child: SizedBox()),
               ],
             ),
             const SizedBox(height: 16),

@@ -18,6 +18,9 @@ class AircraftMapper {
       batteryVoltageV: entity.batteryVoltageV,
       batteryType: entity.batteryType,
       batteryCellCount: entity.batteryCellCount,
+      cellInternalResistanceMilliOhm: entity.cellInternalResistanceMilliOhm > 0
+          ? entity.cellInternalResistanceMilliOhm
+          : null,
       cruiseSpeedMs: entity.cruiseSpeedMs,
       zeroLiftDragCoefficient: entity.zeroLiftDragCoefficient,
       maxLiftCoefficient: entity.maxLiftCoefficient,
@@ -62,6 +65,7 @@ class AircraftMapper {
       motorEfficiency: model.motorEfficiency,
       continuousMotorPowerW: model.continuousMotorPowerW,
       maximumMotorPowerW: model.maximumMotorPowerW,
+      cellInternalResistanceMilliOhm: model.cellInternalResistanceMilliOhm,
     );
   }
 }

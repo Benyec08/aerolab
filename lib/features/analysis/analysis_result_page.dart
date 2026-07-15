@@ -34,6 +34,7 @@ class AnalysisResultPage extends StatelessWidget {
                 _buildPropulsionSection(),
                 _buildMissionPowerSection(),
                 _buildEnergySection(),
+                _buildBatteryRecommendationSection(),
                 _buildPowerReserveSection(),
                 _buildRecommendationCard(),
               ],
@@ -406,37 +407,218 @@ class AnalysisResultPage extends StatelessWidget {
   }
 
   Widget _buildEnergySection() {
-    final batteryUtilizationPercent = result.nominalBatteryEnergyWh > 0
-        ? (result.usableBatteryEnergyWh / result.nominalBatteryEnergyWh) * 100
-        : 0.0;
+    return ResultSection(
+      title: 'Energy & Battery System',
+      icon: Icons.battery_charging_full,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGrid([
+            ResultCard(
+              title: 'Estimated Flight Time',
+              value: '${result.estimatedFlightTime.toStringAsFixed(1)} min',
+            ),
+            ResultCard(
+              title: 'Average Battery Current',
+              value: '${result.averageBatteryCurrentA.toStringAsFixed(2)} A',
+            ),
+            ResultCard(
+              title: 'Peak Battery Current',
+              value: '${result.peakBatteryCurrentA.toStringAsFixed(2)} A',
+            ),
+            ResultCard(
+              title: 'Nominal Battery Energy',
+              value: '${result.nominalBatteryEnergyWh.toStringAsFixed(1)} Wh',
+            ),
+            ResultCard(
+              title: 'Real Usable Energy',
+              value: '${result.usableBatteryEnergyWh.toStringAsFixed(1)} Wh',
+            ),
+            ResultCard(
+              title: 'Battery Load Efficiency',
+              value:
+                  '${(result.batteryLoadEfficiency * 100).toStringAsFixed(1)}%',
+              color: _batteryEfficiencyColor(result.batteryLoadEfficiency),
+            ),
+          ]),
+          const SizedBox(height: 24),
+          const Text(
+            'Cell & Pack Voltage',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF102A43),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _buildGrid([
+            ResultCard(
+              title: 'Full Pack Voltage',
+              value: '${result.fullPackVoltageV.toStringAsFixed(2)} V',
+            ),
+            ResultCard(
+              title: 'Nominal Pack Voltage',
+              value: '${result.nominalPackVoltageV.toStringAsFixed(2)} V',
+            ),
+            ResultCard(
+              title: 'Minimum Safe Pack Voltage',
+              value: '${result.minimumSafePackVoltageV.toStringAsFixed(2)} V',
+            ),
+            ResultCard(
+              title: 'Pack Internal Resistance',
+              value:
+                  '${(result.packInternalResistanceOhm * 1000).toStringAsFixed(1)} mΩ',
+            ),
+          ]),
+          const SizedBox(height: 24),
+          const Text(
+            'Loaded Voltage & C-rate',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF102A43),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _buildGrid([
+            ResultCard(
+              title: 'Average Loaded Voltage',
+              value: '${result.averageLoadedVoltageV.toStringAsFixed(2)} V',
+              color: _loadedVoltageColor(result.averageLoadedVoltageV),
+            ),
+            ResultCard(
+              title: 'Peak Loaded Voltage',
+              value: '${result.peakLoadedVoltageV.toStringAsFixed(2)} V',
+              color: _loadedVoltageColor(result.peakLoadedVoltageV),
+            ),
+            ResultCard(
+              title: 'Average Voltage Sag',
+              value: '${result.averageVoltageSagV.toStringAsFixed(2)} V',
+              color: _voltageSagColor(
+                result.averageVoltageSagV,
+                result.nominalPackVoltageV,
+              ),
+            ),
+            ResultCard(
+              title: 'Peak Voltage Sag',
+              value: '${result.peakVoltageSagV.toStringAsFixed(2)} V',
+              color: _voltageSagColor(
+                result.peakVoltageSagV,
+                result.nominalPackVoltageV,
+              ),
+            ),
+            ResultCard(
+              title: 'Average C-rate',
+              value: '${result.averageCRate.toStringAsFixed(2)} C',
+              color: _cRateColor(result.averageCRate),
+            ),
+            ResultCard(
+              title: 'Peak C-rate',
+              value: '${result.peakCRate.toStringAsFixed(2)} C',
+              color: _cRateColor(result.peakCRate),
+            ),
+            ResultCard(
+              title: 'Battery System Status',
+              value: result.batterySystemStatus,
+              color: result.isBatterySystemSafe ? Colors.green : Colors.red,
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBatteryRecommendationSection() {
+    final recommendationColor = result.isBatteryRecommendationSafe
+        ? Colors.green
+        : Colors.red;
 
     return ResultSection(
-      title: 'Energy & Endurance',
-      icon: Icons.battery_charging_full,
-      child: _buildGrid([
-        ResultCard(
-          title: 'Estimated Flight Time',
-          value: '${result.estimatedFlightTime.toStringAsFixed(1)} dk',
+      title: 'Battery Safety Recommendation',
+      icon: Icons.battery_alert_outlined,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: recommendationColor.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: recommendationColor.withValues(alpha: 0.30),
+          ),
         ),
-        ResultCard(
-          title: 'Average Battery Current',
-          value: '${result.averageBatteryCurrentA.toStringAsFixed(1)} A',
-          color: _currentColor(result.averageBatteryCurrentA),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              result.batteryRecommendationTitle,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: recommendationColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              result.batteryRecommendationMessage,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.5,
+                color: Color(0xFF486581),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildGrid([
+              ResultCard(
+                title: 'Battery Score',
+                value: '${result.batteryScore}/100',
+                color: _scoreColor(result.batteryScore),
+              ),
+              ResultCard(
+                title: 'Battery Score Status',
+                value: result.batteryScoreStatus,
+                color: _scoreColor(result.batteryScore),
+              ),
+            ]),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: recommendationColor.withValues(alpha: 0.28),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Battery Safety',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF627D98),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    result.batterySafetyMessage,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.45,
+                      fontWeight: FontWeight.w700,
+                      color: result.isBatterySystemSafe
+                          ? Colors.green
+                          : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        ResultCard(
-          title: 'Nominal Battery Energy',
-          value: '${result.nominalBatteryEnergyWh.toStringAsFixed(1)} Wh',
-        ),
-        ResultCard(
-          title: 'Usable Battery Energy',
-          value: '${result.usableBatteryEnergyWh.toStringAsFixed(1)} Wh',
-        ),
-        ResultCard(
-          title: 'Battery Utilization',
-          value: '${batteryUtilizationPercent.toStringAsFixed(0)}%',
-          color: _batteryUtilizationColor(batteryUtilizationPercent),
-        ),
-      ]),
+      ),
     );
   }
 
@@ -653,6 +835,56 @@ class AnalysisResultPage extends StatelessWidget {
     return Colors.red;
   }
 
+  Color _batteryEfficiencyColor(double efficiency) {
+    if (efficiency >= 0.95) {
+      return Colors.green;
+    }
+
+    if (efficiency >= 0.85) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _loadedVoltageColor(double loadedVoltageV) {
+    if (loadedVoltageV >= result.minimumSafePackVoltageV) {
+      return Colors.green;
+    }
+
+    return Colors.red;
+  }
+
+  Color _voltageSagColor(double voltageSagV, double nominalVoltageV) {
+    if (nominalVoltageV <= 0) {
+      return Colors.red;
+    }
+
+    final sagRatio = voltageSagV / nominalVoltageV;
+
+    if (sagRatio <= 0.05) {
+      return Colors.green;
+    }
+
+    if (sagRatio <= 0.10) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _cRateColor(double cRate) {
+    if (cRate <= 5.0) {
+      return Colors.green;
+    }
+
+    if (cRate <= 15.0) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
   Color _propulsionEfficiencyColor(double efficiency) {
     if (efficiency >= 0.60) {
       return Colors.green;
@@ -707,30 +939,6 @@ class AnalysisResultPage extends StatelessWidget {
     }
 
     if (reservePercent >= 10) {
-      return Colors.orange;
-    }
-
-    return Colors.red;
-  }
-
-  Color _batteryUtilizationColor(double utilizationPercent) {
-    if (utilizationPercent <= 85) {
-      return Colors.green;
-    }
-
-    if (utilizationPercent <= 90) {
-      return Colors.orange;
-    }
-
-    return Colors.red;
-  }
-
-  Color _currentColor(double currentA) {
-    if (currentA <= 30) {
-      return Colors.green;
-    }
-
-    if (currentA <= 60) {
       return Colors.orange;
     }
 

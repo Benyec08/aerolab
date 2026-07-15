@@ -53,13 +53,16 @@ class AircraftEntityAdapter extends TypeAdapter<AircraftEntity> {
       maximumMotorPowerW: fields[23] == null
           ? 0.0
           : (fields[23] as num?)?.toDouble(),
+      cellInternalResistanceMilliOhm: fields[24] == null
+          ? 0.0
+          : (fields[24] as num?)?.toDouble(),
     );
   }
 
   @override
   void write(BinaryWriter writer, AircraftEntity obj) {
     writer
-      ..writeByte(24)
+      ..writeByte(25)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -107,7 +110,9 @@ class AircraftEntityAdapter extends TypeAdapter<AircraftEntity> {
       ..writeByte(22)
       ..write(obj.continuousMotorPowerW)
       ..writeByte(23)
-      ..write(obj.maximumMotorPowerW);
+      ..write(obj.maximumMotorPowerW)
+      ..writeByte(24)
+      ..write(obj.cellInternalResistanceMilliOhm);
   }
 
   @override

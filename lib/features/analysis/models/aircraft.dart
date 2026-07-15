@@ -17,6 +17,14 @@ class Aircraft {
   final String batteryType;
   final int batteryCellCount;
 
+  // Sprint 12A
+  //
+  // Hücre başına iç direnç değeri mΩ cinsindedir.
+  //
+  // Örnek:
+  // 4.0 mΩ / cell
+  final double cellInternalResistanceMilliOhm;
+
   // Sprint 10B
   // Sabit kanat ve kanatlı VTOL araçları için aerodinamik girdiler.
   //
@@ -31,7 +39,7 @@ class Aircraft {
   // Verim değerleri yüzde olarak değil, 0–1 aralığında saklanır.
   //
   // Örnek:
-  // %95 ESC verimi  -> 0.95
+  // %95 ESC verimi   -> 0.95
   // %85 motor verimi -> 0.85
   final double escEfficiency;
   final double motorEfficiency;
@@ -42,7 +50,7 @@ class Aircraft {
   /// Motor sisteminin kısa süreli sağlayabildiği toplam maksimum güç.
   final double maximumMotorPowerW;
 
-  const Aircraft({
+  Aircraft({
     required this.name,
     required this.type,
     required this.weightKg,
@@ -55,6 +63,7 @@ class Aircraft {
     required this.batteryVoltageV,
     required this.batteryType,
     required this.batteryCellCount,
+    double? cellInternalResistanceMilliOhm,
     this.cruiseSpeedMs = 15.0,
     this.zeroLiftDragCoefficient = 0.030,
     this.maxLiftCoefficient = 1.4,
@@ -63,6 +72,30 @@ class Aircraft {
     this.motorEfficiency = 0.85,
     double? continuousMotorPowerW,
     double? maximumMotorPowerW,
-  }) : continuousMotorPowerW = continuousMotorPowerW ?? motorPowerW,
+  }) : cellInternalResistanceMilliOhm =
+           cellInternalResistanceMilliOhm ??
+           _defaultCellInternalResistanceMilliOhm(batteryType),
+       continuousMotorPowerW = continuousMotorPowerW ?? motorPowerW,
        maximumMotorPowerW = maximumMotorPowerW ?? motorPowerW;
+
+  static double _defaultCellInternalResistanceMilliOhm(String batteryType) {
+    final normalizedType = batteryType
+        .trim()
+        .toLowerCase()
+        .replaceAll('-', '')
+        .replaceAll(' ', '');
+
+    switch (normalizedType) {
+      case 'liion':
+      case 'lion':
+        return 18.0;
+
+      case 'lihv':
+        return 4.5;
+
+      case 'lipo':
+      default:
+        return 4.0;
+    }
+  }
 }

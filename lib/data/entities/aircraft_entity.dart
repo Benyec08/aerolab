@@ -92,6 +92,15 @@ class AircraftEntity {
   @HiveField(23, defaultValue: 0.0)
   final double maximumMotorPowerW;
 
+  // Sprint 12A
+  //
+  // Hücre başına iç direnç mΩ cinsindedir.
+  //
+  // 0.0 değeri, kayıt içinde özel bir değer bulunmadığını belirtir.
+  // Bu durumda BatteryChemistryService kimyaya bağlı varsayılanı kullanır.
+  @HiveField(24, defaultValue: 0.0)
+  final double cellInternalResistanceMilliOhm;
+
   AircraftEntity({
     required this.id,
     required this.name,
@@ -117,6 +126,7 @@ class AircraftEntity {
     this.motorEfficiency = 0.85,
     double? continuousMotorPowerW,
     double? maximumMotorPowerW,
+    double? cellInternalResistanceMilliOhm,
   }) : continuousMotorPowerW =
            continuousMotorPowerW == null || continuousMotorPowerW <= 0
            ? motorPowerW
@@ -124,7 +134,12 @@ class AircraftEntity {
        maximumMotorPowerW =
            maximumMotorPowerW == null || maximumMotorPowerW <= 0
            ? motorPowerW
-           : maximumMotorPowerW;
+           : maximumMotorPowerW,
+       cellInternalResistanceMilliOhm =
+           cellInternalResistanceMilliOhm == null ||
+               cellInternalResistanceMilliOhm <= 0
+           ? 0.0
+           : cellInternalResistanceMilliOhm;
 
   factory AircraftEntity.create({
     required String name,
@@ -148,6 +163,7 @@ class AircraftEntity {
     double motorEfficiency = 0.85,
     double? continuousMotorPowerW,
     double? maximumMotorPowerW,
+    double? cellInternalResistanceMilliOhm,
   }) {
     final now = DateTime.now();
 
@@ -176,6 +192,7 @@ class AircraftEntity {
       motorEfficiency: motorEfficiency,
       continuousMotorPowerW: continuousMotorPowerW,
       maximumMotorPowerW: maximumMotorPowerW,
+      cellInternalResistanceMilliOhm: cellInternalResistanceMilliOhm,
     );
   }
 
@@ -204,6 +221,7 @@ class AircraftEntity {
     double? motorEfficiency,
     double? continuousMotorPowerW,
     double? maximumMotorPowerW,
+    double? cellInternalResistanceMilliOhm,
   }) {
     final updatedMotorPowerW = motorPowerW ?? this.motorPowerW;
 
@@ -236,6 +254,8 @@ class AircraftEntity {
       continuousMotorPowerW:
           continuousMotorPowerW ?? this.continuousMotorPowerW,
       maximumMotorPowerW: maximumMotorPowerW ?? this.maximumMotorPowerW,
+      cellInternalResistanceMilliOhm:
+          cellInternalResistanceMilliOhm ?? this.cellInternalResistanceMilliOhm,
     );
   }
 
@@ -280,6 +300,10 @@ class AircraftEntity {
         map['maximumMotorPowerW'],
         fallback: motorPowerW,
       ),
+      cellInternalResistanceMilliOhm: _toDouble(
+        map['cellInternalResistanceMilliOhm'],
+        fallback: 0.0,
+      ),
     );
   }
 
@@ -311,6 +335,7 @@ class AircraftEntity {
       'motorEfficiency': motorEfficiency,
       'continuousMotorPowerW': continuousMotorPowerW,
       'maximumMotorPowerW': maximumMotorPowerW,
+      'cellInternalResistanceMilliOhm': cellInternalResistanceMilliOhm,
     };
   }
 

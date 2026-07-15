@@ -320,3 +320,225 @@ All notable changes to this project will be documented in this file.
 - Aircraft Hangar
 - Engineering Analysis Form
 - Professional Result Report
+
+# v1.0.0-beta
+
+## Sprint 10A - Vehicle Specific Mission Power Engine
+
+### Added
+
+- MissionPowerService
+- MissionPowerResult model
+- Multirotor hover mission power model
+- Fixed-wing cruise mission power model
+- VTOL hybrid mission power model
+- Average mission power calculation
+- Peak mission power calculation
+- Installed power reserve calculation
+- Installed power reserve percentage
+- Peak power usage ratio
+- Motor system sufficiency evaluation
+- Average battery current reporting
+- Nominal battery energy calculation
+- Usable battery energy calculation
+
+### Improved
+
+- FlightTimeService
+- AnalysisService
+- Vehicle-type-aware power calculations
+- Flight endurance estimation accuracy
+- Energy analysis transparency
+- Energy & Endurance report section
+- Power Reserve report section
+
+---
+
+## Sprint 10B - Realistic Aerodynamic Performance Engine
+
+### Added
+
+- AerodynamicPerformanceService
+- AerodynamicPerformanceResult model
+- Vehicle-specific cruise speed model
+- Required cruise lift coefficient calculation
+- Zero-lift drag coefficient (CD0)
+- Parabolic drag polar model
+- Oswald efficiency factor
+- Induced drag factor calculation
+- Dynamic pressure calculation
+- Lift-to-drag ratio calculation
+- CL / CLmax usage ratio calculation
+- Cruise aerodynamic validity evaluation
+- Persistent aerodynamic aircraft parameters
+- Cruise speed storage
+- CD0 storage
+- CLmax storage
+- Oswald efficiency storage
+
+### Improved
+
+- Lift force calculation accuracy
+- Drag force calculation accuracy
+- Fixed-wing cruise performance analysis
+- VTOL wing-borne cruise calculations
+- Mission power calculations
+- AnalysisService
+- Aircraft model
+- AircraftEntity
+- AircraftMapper
+- Professional aerodynamic report interface
+
+---
+
+## Sprint 11 - Professional Propulsion System Analysis Engine
+
+### Added
+
+- PropulsionPowerChainService
+- PropulsionLoadService
+- PropulsionSystemService
+- ESC efficiency model
+- Motor efficiency model improvements
+- Continuous motor power model
+- Maximum motor power model
+- ESC output power calculation
+- Motor shaft power calculation
+- Useful propulsive power calculation
+- Total propulsion efficiency calculation
+- Average continuous motor load ratio calculation
+- Peak maximum motor load ratio calculation
+- Continuous power reserve calculation
+- Maximum power reserve calculation
+- Propulsion system status evaluation
+- Persistent propulsion aircraft parameters
+- ESC efficiency storage
+- Motor efficiency storage
+- Continuous motor power storage
+- Maximum motor power storage
+- Propulsion power chain result reporting
+- Motor load analysis result reporting
+
+### Improved
+
+- AnalysisService
+- AnalysisResult model
+- Aircraft model
+- AircraftEntity
+- AircraftMapper
+- Aircraft creation and edit workflow
+- Engineering analysis form
+- Mission power integration
+- Flight time estimation accuracy
+- Battery current estimation accuracy
+- Propulsion system analysis accuracy
+- Professional propulsion report interface
+
+---
+
+## Current Engineering Capabilities
+
+### Aerodynamics
+
+- ISA Atmosphere Model
+- Air Density
+- Lift Force
+- Drag Force
+- Stall Speed
+- Aspect Ratio
+- Wing Loading
+- Vehicle-Specific Cruise Speed
+- Required Cruise Lift Coefficient
+- Zero-Lift Drag Coefficient
+- Parabolic Drag Polar
+- Oswald Efficiency Factor
+- Induced Drag Factor
+- Dynamic Pressure
+- Lift-to-Drag Ratio
+- CL / CLmax Usage Ratio
+- Cruise Aerodynamic Validity Evaluation
+
+### Propulsion
+
+- Physics-Based Thrust Estimation
+- Motor Efficiency
+- ESC Efficiency Model
+- Continuous Motor Power Model
+- Maximum Motor Power Model
+- Power-to-Weight Ratio
+- Thrust-to-Weight Ratio
+- Drone Hover Power Model
+- Fixed-Wing Cruise Power Model
+- VTOL Hybrid Mission Power Model
+- Average Mission Power
+- Peak Mission Power
+- Installed Power Reserve
+- Peak Power Usage Ratio
+- Motor System Sufficiency Evaluation
+- Propulsion Power Chain Analysis
+- ESC Output Power Calculation
+- Motor Shaft Power Calculation
+- Useful Propulsive Power Calculation
+- Total Propulsion Efficiency Calculation
+- Motor Load Analysis
+- Average Continuous Motor Load Ratio
+- Peak Maximum Motor Load Ratio
+- Continuous Power Reserve Evaluation
+- Maximum Power Reserve Evaluation
+- Propulsion System Status Evaluation
+
+### Energy
+
+- Battery Validation
+- Battery Reserve Model
+- Detailed Flight Time Estimation
+- Nominal Battery Energy
+- Usable Battery Energy
+- Average Battery Current
+- Battery Utilization Ratio
+- Battery Health Infrastructure
+- Temperature Correction Infrastructure
+- Load Correction Infrastructure
+
+### Performance Evaluation
+
+- Overall Engineering Score
+- Aerodynamic Score
+- Propulsion Score
+- Energy Score
+- Risk Assessment
+- Recommendation Engine
+- Vehicle Type Aware Analysis
+- Cruise Validity Evaluation
+- Power Reserve Evaluation
+- Propulsion System Evaluation
+
+### Data Management
+
+- Hive Database
+- Aircraft Repository
+- Aircraft Library
+- Persistent Storage
+- Persistent Aerodynamic Parameters
+- Persistent Propulsion Parameters
+- Cruise Speed Storage
+- CD0 Storage
+- CLmax Storage
+- Oswald Efficiency Storage
+- ESC Efficiency Storage
+- Motor Efficiency Storage
+- Continuous Motor Power Storage
+- Maximum Motor Power Storage
+
+### User Interface
+
+- Professional Dashboard
+- Aircraft Hangar
+- Engineering Analysis Form
+- Professional Result Report
+- Advanced Aerodynamic Performance Section
+- Mission Power Analysis Section
+- Energy & Endurance Section
+- Power Reserve Section
+- Advanced Propulsion Analysis Section
+- Vehicle-Type-Specific Result Display

@@ -13,7 +13,6 @@ class AnalysisResult {
   final double estimatedThrustN;
 
   // Sprint 10A
-  // Görev gücü ve enerji detayları.
   final String missionPowerModelName;
 
   final double hoverPowerW;
@@ -31,7 +30,6 @@ class AnalysisResult {
   final double usableBatteryEnergyWh;
 
   // Sprint 10B
-  // Gerçekçi seyir aerodinamiği sonuçları.
   final double cruiseSpeedMs;
   final double dynamicPressurePa;
   final double requiredLiftCoefficient;
@@ -42,40 +40,40 @@ class AnalysisResult {
   final bool isCruiseAerodynamicallyValid;
 
   // Sprint 11
-  // Propulsion güç zinciri ve motor yük analizi sonuçları.
-
-  /// Ortalama görev gücü altında ESC çıkışındaki elektriksel güç.
   final double escOutputPowerW;
-
-  /// Ortalama görev gücü altında motor milindeki mekanik güç.
   final double motorShaftPowerW;
-
-  /// Ortalama görev gücü altında pervaneye aktarılan faydalı güç.
   final double usefulPropulsivePowerW;
-
-  /// ESC, motor ve pervane toplam verimi.
-  ///
-  /// Değer 0–1 aralığındadır.
   final double totalPropulsionEfficiency;
-
-  /// Ortalama görev gücünün sürekli motor gücüne oranı.
-  ///
-  /// Değer 0–1 aralığında olabilir; limit aşımında 1’den büyük olabilir.
   final double averageContinuousLoadRatio;
-
-  /// Peak görev gücünün maksimum motor gücüne oranı.
-  ///
-  /// Değer 0–1 aralığında olabilir; limit aşımında 1’den büyük olabilir.
   final double peakMaximumLoadRatio;
-
-  /// Sürekli motor gücü ile ortalama görev gücü arasındaki rezerv.
   final double continuousPowerReserveW;
-
-  /// Maksimum motor gücü ile peak görev gücü arasındaki rezerv.
   final double maximumPowerReserveW;
-
   final bool isPropulsionSystemSafe;
   final String propulsionSystemStatus;
+
+  // Sprint 12
+  final double fullPackVoltageV;
+  final double nominalPackVoltageV;
+  final double minimumSafePackVoltageV;
+  final double packInternalResistanceOhm;
+  final double averageLoadedVoltageV;
+  final double peakLoadedVoltageV;
+  final double averageVoltageSagV;
+  final double peakVoltageSagV;
+  final double peakBatteryCurrentA;
+  final double averageCRate;
+  final double peakCRate;
+  final double batteryLoadEfficiency;
+  final bool isBatterySystemSafe;
+  final String batterySystemStatus;
+
+  // Sprint 12D
+  final int batteryScore;
+  final String batteryScoreStatus;
+  final String batterySafetyMessage;
+  final String batteryRecommendationTitle;
+  final String batteryRecommendationMessage;
+  final bool isBatteryRecommendationSafe;
 
   final String wingLoadingStatus;
   final String powerToWeightStatus;
@@ -132,6 +130,26 @@ class AnalysisResult {
     required this.maximumPowerReserveW,
     required this.isPropulsionSystemSafe,
     required this.propulsionSystemStatus,
+    required this.fullPackVoltageV,
+    required this.nominalPackVoltageV,
+    required this.minimumSafePackVoltageV,
+    required this.packInternalResistanceOhm,
+    required this.averageLoadedVoltageV,
+    required this.peakLoadedVoltageV,
+    required this.averageVoltageSagV,
+    required this.peakVoltageSagV,
+    required this.peakBatteryCurrentA,
+    required this.averageCRate,
+    required this.peakCRate,
+    required this.batteryLoadEfficiency,
+    required this.isBatterySystemSafe,
+    required this.batterySystemStatus,
+    required this.batteryScore,
+    required this.batteryScoreStatus,
+    required this.batterySafetyMessage,
+    required this.batteryRecommendationTitle,
+    required this.batteryRecommendationMessage,
+    required this.isBatteryRecommendationSafe,
     required this.wingLoadingStatus,
     required this.powerToWeightStatus,
     required this.thrustToWeightStatus,
