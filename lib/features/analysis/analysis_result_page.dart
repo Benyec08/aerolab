@@ -30,6 +30,8 @@ class AnalysisResultPage extends StatelessWidget {
                 _buildRiskCard(),
                 const SizedBox(height: 28),
                 _buildScoreSection(),
+                _buildAtmosphereSection(),
+                _buildWindSection(),
                 _buildAerodynamicSection(),
                 _buildPropulsionSection(),
                 _buildMissionPowerSection(),
@@ -149,6 +151,197 @@ class AnalysisResultPage extends StatelessWidget {
       title: 'Performance Score',
       icon: Icons.query_stats,
       child: _buildGrid(scoreCards),
+    );
+  }
+
+  Widget _buildAtmosphereSection() {
+    return ResultSection(
+      title: 'Atmosphere Analysis',
+      icon: Icons.cloud_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGrid([
+            ResultCard(
+              title: 'Geometric Altitude',
+              value: '${result.geometricAltitudeM.toStringAsFixed(0)} m',
+            ),
+            ResultCard(
+              title: 'Density Altitude',
+              value: _formatMetersWithoutNegativeZero(result.densityAltitudeM),
+              color: _densityAltitudeColor(result.densityAltitudeDifferenceM),
+            ),
+            ResultCard(
+              title: 'Density Altitude Difference',
+              value: _formatSignedMetersWithoutNegativeZero(
+                result.densityAltitudeDifferenceM,
+              ),
+              color: _densityAltitudeColor(result.densityAltitudeDifferenceM),
+            ),
+            ResultCard(
+              title: 'Environment Temperature',
+              value: '${result.environmentTemperatureC.toStringAsFixed(1)} °C',
+            ),
+            ResultCard(
+              title: 'ISA Temperature',
+              value: '${result.isaTemperatureC.toStringAsFixed(1)} °C',
+            ),
+            ResultCard(
+              title: 'ISA Temperature Deviation',
+              value:
+                  '${result.temperatureDeviationC >= 0 ? '+' : ''}'
+                  '${result.temperatureDeviationC.toStringAsFixed(1)} °C',
+              color: _temperatureDeviationColor(result.temperatureDeviationC),
+            ),
+            ResultCard(
+              title: 'Environment Pressure',
+              value: '${result.environmentPressureHpa.toStringAsFixed(1)} hPa',
+            ),
+            ResultCard(
+              title: 'ISA Pressure',
+              value: '${result.isaPressureHpa.toStringAsFixed(1)} hPa',
+            ),
+            ResultCard(
+              title: 'Pressure Deviation',
+              value:
+                  '${result.pressureDeviationPercent >= 0 ? '+' : ''}'
+                  '${result.pressureDeviationPercent.toStringAsFixed(1)}%',
+              color: _pressureDeviationColor(result.pressureDeviationPercent),
+            ),
+          ]),
+          const SizedBox(height: 24),
+          const Text(
+            'Humidity & Air Density',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF102A43),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _buildGrid([
+            ResultCard(
+              title: 'Relative Humidity',
+              value: '${result.relativeHumidityPercent.toStringAsFixed(1)}%',
+            ),
+            ResultCard(
+              title: 'Humid Air Density',
+              value: '${result.humidAirDensityKgM3.toStringAsFixed(4)} kg/m³',
+            ),
+            ResultCard(
+              title: 'ISA Air Density',
+              value: '${result.isaDensityKgM3.toStringAsFixed(4)} kg/m³',
+            ),
+            ResultCard(
+              title: 'Density Deviation',
+              value:
+                  '${result.densityDeviationPercent >= 0 ? '+' : ''}'
+                  '${result.densityDeviationPercent.toStringAsFixed(1)}%',
+              color: _densityDeviationColor(result.densityDeviationPercent),
+            ),
+            ResultCard(
+              title: 'Vapor Pressure',
+              value: '${result.vaporPressureHpa.toStringAsFixed(2)} hPa',
+            ),
+            ResultCard(
+              title: 'Dry Air Partial Pressure',
+              value:
+                  '${result.dryAirPartialPressureHpa.toStringAsFixed(2)} hPa',
+            ),
+            ResultCard(
+              title: 'Atmosphere Status',
+              value: result.atmosphereStatus,
+              color: _atmosphereStatusColor(
+                result.isAtmosphereWithinSupportedLimits,
+                result.atmosphereStatus,
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWindSection() {
+    return ResultSection(
+      title: 'Wind System Analysis',
+      icon: Icons.air,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGrid([
+            ResultCard(
+              title: 'Wind Speed',
+              value:
+                  '${result.windSpeedKmh.toStringAsFixed(1)} km/h'
+                  ' (${result.windSpeedMs.toStringAsFixed(2)} m/s)',
+              color: _windIntensityColor(result.windIntensityStatus),
+            ),
+            ResultCard(title: 'Wind Direction', value: result.windDirection),
+            ResultCard(
+              title: 'Wind Intensity',
+              value: result.windIntensityStatus,
+              color: _windIntensityColor(result.windIntensityStatus),
+            ),
+            ResultCard(
+              title: 'Headwind Component',
+              value: '${result.headwindComponentMs.toStringAsFixed(2)} m/s',
+              color: result.headwindComponentMs > 0
+                  ? Colors.orange
+                  : const Color(0xFF627D98),
+            ),
+            ResultCard(
+              title: 'Tailwind Component',
+              value: '${result.tailwindComponentMs.toStringAsFixed(2)} m/s',
+              color: result.tailwindComponentMs > 0
+                  ? Colors.orange
+                  : const Color(0xFF627D98),
+            ),
+            ResultCard(
+              title: 'Crosswind Component',
+              value:
+                  '${result.crosswindComponentMs.toStringAsFixed(2)} m/s'
+                  ' • ${result.crosswindDirection}',
+              color: _crosswindColor(result.crosswindComponentMs),
+            ),
+          ]),
+          const SizedBox(height: 24),
+          const Text(
+            'Airspeed & Ground Speed',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF102A43),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _buildGrid([
+            ResultCard(
+              title: 'Commanded Airspeed',
+              value: '${result.commandedAirspeedMs.toStringAsFixed(2)} m/s',
+            ),
+            ResultCard(
+              title: 'Effective Airspeed',
+              value: '${result.effectiveAirspeedMs.toStringAsFixed(2)} m/s',
+              color: _effectiveAirspeedColor(
+                result.commandedAirspeedMs,
+                result.effectiveAirspeedMs,
+              ),
+            ),
+            ResultCard(
+              title: 'Estimated Ground Speed',
+              value: '${result.estimatedGroundSpeedMs.toStringAsFixed(2)} m/s',
+            ),
+            ResultCard(
+              title: 'Wind Safety',
+              value: result.windSafetyStatus,
+              color: result.isWindWithinSupportedLimits
+                  ? _windSafetyColor(result.windSafetyStatus)
+                  : Colors.red,
+            ),
+          ]),
+        ],
+      ),
     );
   }
 
@@ -735,6 +928,17 @@ class AnalysisResultPage extends StatelessWidget {
     );
   }
 
+  String _formatMetersWithoutNegativeZero(double value) {
+    final normalizedValue = value.abs() < 0.5 ? 0.0 : value;
+    return '${normalizedValue.toStringAsFixed(0)} m';
+  }
+
+  String _formatSignedMetersWithoutNegativeZero(double value) {
+    final normalizedValue = value.abs() < 0.5 ? 0.0 : value;
+    final sign = normalizedValue > 0 ? '+' : '';
+    return '$sign${normalizedValue.toStringAsFixed(0)} m';
+  }
+
   String _buildStars(int score) {
     if (score >= 90) return '★★★★★';
     if (score >= 80) return '★★★★☆';
@@ -773,6 +977,144 @@ class AnalysisResultPage extends StatelessWidget {
     }
 
     return 'Kritik Güç Rezervi';
+  }
+
+  Color _densityAltitudeColor(double differenceM) {
+    if (differenceM <= 300) {
+      return Colors.green;
+    }
+
+    if (differenceM <= 1000) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _temperatureDeviationColor(double deviationC) {
+    final absoluteDeviation = deviationC.abs();
+
+    if (absoluteDeviation <= 5) {
+      return Colors.green;
+    }
+
+    if (absoluteDeviation <= 15) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _pressureDeviationColor(double deviationPercent) {
+    final absoluteDeviation = deviationPercent.abs();
+
+    if (absoluteDeviation <= 3) {
+      return Colors.green;
+    }
+
+    if (absoluteDeviation <= 8) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _densityDeviationColor(double deviationPercent) {
+    if (deviationPercent >= -3) {
+      return Colors.green;
+    }
+
+    if (deviationPercent >= -10) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _atmosphereStatusColor(bool isSupported, String status) {
+    if (!isSupported) {
+      return Colors.red;
+    }
+
+    final normalizedStatus = status.toLowerCase();
+
+    if (normalizedStatus.contains('normal') ||
+        normalizedStatus.contains('uygun') ||
+        normalizedStatus.contains('standart')) {
+      return Colors.green;
+    }
+
+    if (normalizedStatus.contains('kritik') ||
+        normalizedStatus.contains('yüksek risk') ||
+        normalizedStatus.contains('desteklenmiyor')) {
+      return Colors.red;
+    }
+
+    return Colors.orange;
+  }
+
+  Color _windIntensityColor(String status) {
+    final normalizedStatus = status.toLowerCase();
+
+    if (normalizedStatus.contains('sakin') ||
+        normalizedStatus.contains('hafif')) {
+      return Colors.green;
+    }
+
+    if (normalizedStatus.contains('orta')) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _crosswindColor(double crosswindMs) {
+    if (crosswindMs <= 3) {
+      return Colors.green;
+    }
+
+    if (crosswindMs <= 8) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _effectiveAirspeedColor(
+    double commandedAirspeedMs,
+    double effectiveAirspeedMs,
+  ) {
+    if (commandedAirspeedMs <= 0) {
+      return const Color(0xFF627D98);
+    }
+
+    final differenceRatio =
+        (effectiveAirspeedMs - commandedAirspeedMs).abs() / commandedAirspeedMs;
+
+    if (differenceRatio <= 0.10) {
+      return Colors.green;
+    }
+
+    if (differenceRatio <= 0.30) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
+  }
+
+  Color _windSafetyColor(String status) {
+    final normalizedStatus = status.toLowerCase();
+
+    if (normalizedStatus.contains('güvenli')) {
+      return Colors.green;
+    }
+
+    if (normalizedStatus.contains('dikkat') ||
+        normalizedStatus.contains('sınırlı')) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
   }
 
   Color _statusColor(String status) {

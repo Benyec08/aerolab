@@ -39,6 +39,8 @@ import 'propulsion_system_service.dart';
 import 'battery_recommendation_service.dart';
 import 'battery_score_service.dart';
 import 'battery_system_service.dart';
+import 'atmosphere_system_service.dart';
+import 'wind_system_service.dart';
 
 class AnalysisService {
   final _aspectRatioService = AspectRatioService();
@@ -56,6 +58,8 @@ class AnalysisService {
   final _batterySystemService = BatterySystemService();
   final _batteryScoreService = BatteryScoreService();
   final _batteryRecommendationService = BatteryRecommendationService();
+  final _atmosphereSystemService = AtmosphereSystemService();
+  final _windSystemService = const WindSystemService();
 
   AnalysisResult analyze(Aircraft aircraft, Environment environment) {
     final bool hasFixedWingAerodynamics =
@@ -66,10 +70,28 @@ class AnalysisService {
 
     final double cruiseSpeedMs = aircraft.cruiseSpeedMs;
 
-    final double airDensity = airDensityService.calculateWithAltitude(
+    final windSystemResult = _windSystemService.calculate(
+      windSpeedKmh: environment.windSpeedKmh,
+      windDirection: environment.windDirection,
+      commandedAirspeedMs: cruiseSpeedMs,
+    );
+
+    // Sprint 13B: Sabit kanat ve kanatlı VTOL aerodinamik hesaplarında
+    // rüzgâr bileşenleriyle düzeltilmiş etkin hava hızı kullanılır.
+    final double aerodynamicAirspeedMs = hasFixedWingAerodynamics
+        ? windSystemResult.effectiveAirspeedMs
+        : cruiseSpeedMs;
+
+    final atmosphereSystemResult = _atmosphereSystemService.calculate(
       altitudeM: environment.altitudeM,
       temperatureC: environment.temperatureC,
+      pressureHpa: environment.pressureHpa,
+      relativeHumidityPercent: environment.humidityPercent,
     );
+
+    // Sprint 13A: Tüm aerodinamik ve itki hesaplarında gerçek ortam
+    // basıncı, sıcaklığı ve nemiyle hesaplanan nemli hava yoğunluğu kullanılır.
+    final double airDensity = atmosphereSystemResult.humidAirDensityKgM3;
 
     final double aspectRatio = hasFixedWingAerodynamics
         ? _aspectRatioService.calculate(
@@ -84,7 +106,7 @@ class AnalysisService {
       aerodynamicPerformance = _aerodynamicPerformanceService.calculateCruise(
         weightKg: aircraft.weightKg,
         airDensityKgM3: airDensity,
-        cruiseSpeedMs: cruiseSpeedMs,
+        cruiseSpeedMs: aerodynamicAirspeedMs,
         wingAreaM2: aircraft.wingAreaM2,
         aspectRatio: aspectRatio,
         zeroLiftDragCoefficient: aircraft.zeroLiftDragCoefficient,
@@ -162,7 +184,7 @@ class AnalysisService {
         .calculate(
           aircraft: aircraft,
           airDensityKgM3: airDensity,
-          flightSpeedMs: cruiseSpeedMs,
+          flightSpeedMs: aerodynamicAirspeedMs,
           dragN: drag,
           motorEfficiency: aircraft.motorEfficiency,
           propellerEfficiency: MissionPowerService.defaultPropellerEfficiency,
@@ -230,7 +252,7 @@ class AnalysisService {
       thrustToWeight: thrustToWeight,
       evaluateFixedWingAerodynamics: hasFixedWingAerodynamics,
       wingLoading: wingLoading,
-      flightSpeedMs: cruiseSpeedMs,
+      flightSpeedMs: aerodynamicAirspeedMs,
       stallSpeedMs: stallSpeed,
     );
 
@@ -243,12 +265,36 @@ class AnalysisService {
       stallSpeed: stallSpeed,
       powerToWeight: powerToWeight,
       thrustToWeight: thrustToWeight,
+      atmosphereStatus: atmosphereSystemResult.atmosphereStatus,
+      isAtmosphereWithinSupportedLimits:
+          atmosphereSystemResult.isAtmosphereWithinSupportedLimits,
+      densityAltitudeDifferenceM:
+          atmosphereSystemResult.densityAltitudeDifferenceM,
+      densityDeviationPercent: atmosphereSystemResult.densityDeviationPercent,
+      temperatureDeviationC: atmosphereSystemResult.temperatureDeviationC,
+      windSafetyStatus: windSystemResult.windSafetyStatus,
+      isWindWithinSupportedLimits: windSystemResult.isWindWithinSupportedLimits,
+      headwindComponentMs: windSystemResult.headwindComponentMs,
+      tailwindComponentMs: windSystemResult.tailwindComponentMs,
+      crosswindComponentMs: windSystemResult.crosswindComponentMs,
     );
 
     final int? aerodynamicScore = _scoreService.aerodynamicScore(
       isApplicable: hasFixedWingAerodynamics,
       wingLoading: wingLoading,
       stallSpeed: stallSpeed,
+      densityAltitudeDifferenceM:
+          atmosphereSystemResult.densityAltitudeDifferenceM,
+      densityDeviationPercent: atmosphereSystemResult.densityDeviationPercent,
+      temperatureDeviationC: atmosphereSystemResult.temperatureDeviationC,
+      atmosphereStatus: atmosphereSystemResult.atmosphereStatus,
+      isAtmosphereWithinSupportedLimits:
+          atmosphereSystemResult.isAtmosphereWithinSupportedLimits,
+      windSafetyStatus: windSystemResult.windSafetyStatus,
+      isWindWithinSupportedLimits: windSystemResult.isWindWithinSupportedLimits,
+      headwindComponentMs: windSystemResult.headwindComponentMs,
+      tailwindComponentMs: windSystemResult.tailwindComponentMs,
+      crosswindComponentMs: windSystemResult.crosswindComponentMs,
     );
 
     final int propulsionScore = _scoreService.propulsionScore(
@@ -339,6 +385,42 @@ class AnalysisService {
       batteryRecommendationTitle: batteryRecommendationResult.title,
       batteryRecommendationMessage: batteryRecommendationResult.message,
       isBatteryRecommendationSafe: batteryRecommendationResult.severity.isSafe,
+      geometricAltitudeM: atmosphereSystemResult.geometricAltitudeM,
+      environmentTemperatureC: atmosphereSystemResult.temperatureC,
+      environmentPressureHpa: atmosphereSystemResult.pressureHpa,
+      relativeHumidityPercent: atmosphereSystemResult.relativeHumidityPercent,
+      isaTemperatureC: atmosphereSystemResult.isaTemperatureC,
+      isaPressureHpa: atmosphereSystemResult.isaPressureHpa,
+      isaDensityKgM3: atmosphereSystemResult.isaDensityKgM3,
+      temperatureDeviationC: atmosphereSystemResult.temperatureDeviationC,
+      pressureDeviationHpa: atmosphereSystemResult.pressureDeviationHpa,
+      pressureDeviationPercent: atmosphereSystemResult.pressureDeviationPercent,
+      densityDeviationKgM3: atmosphereSystemResult.densityDeviationKgM3,
+      densityDeviationPercent: atmosphereSystemResult.densityDeviationPercent,
+      saturationVaporPressureHpa:
+          atmosphereSystemResult.saturationVaporPressureHpa,
+      vaporPressureHpa: atmosphereSystemResult.vaporPressureHpa,
+      dryAirPartialPressureHpa: atmosphereSystemResult.dryAirPartialPressureHpa,
+      humidAirDensityKgM3: atmosphereSystemResult.humidAirDensityKgM3,
+      densityAltitudeM: atmosphereSystemResult.densityAltitudeM,
+      densityAltitudeDifferenceM:
+          atmosphereSystemResult.densityAltitudeDifferenceM,
+      atmosphereStatus: atmosphereSystemResult.atmosphereStatus,
+      isAtmosphereWithinSupportedLimits:
+          atmosphereSystemResult.isAtmosphereWithinSupportedLimits,
+      windSpeedKmh: windSystemResult.windSpeedKmh,
+      windSpeedMs: windSystemResult.windSpeedMs,
+      windDirection: windSystemResult.windDirection,
+      headwindComponentMs: windSystemResult.headwindComponentMs,
+      tailwindComponentMs: windSystemResult.tailwindComponentMs,
+      crosswindComponentMs: windSystemResult.crosswindComponentMs,
+      crosswindDirection: windSystemResult.crosswindDirection,
+      commandedAirspeedMs: windSystemResult.commandedAirspeedMs,
+      effectiveAirspeedMs: windSystemResult.effectiveAirspeedMs,
+      estimatedGroundSpeedMs: windSystemResult.estimatedGroundSpeedMs,
+      windIntensityStatus: windSystemResult.windIntensityStatus,
+      windSafetyStatus: windSystemResult.windSafetyStatus,
+      isWindWithinSupportedLimits: windSystemResult.isWindWithinSupportedLimits,
       wingLoadingStatus: wingLoadingStatus,
       powerToWeightStatus: powerToWeightStatus,
       thrustToWeightStatus: thrustToWeightStatus,

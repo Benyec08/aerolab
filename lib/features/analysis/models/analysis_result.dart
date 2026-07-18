@@ -75,6 +75,42 @@ class AnalysisResult {
   final String batteryRecommendationMessage;
   final bool isBatteryRecommendationSafe;
 
+  // Sprint 13A
+  final double geometricAltitudeM;
+  final double environmentTemperatureC;
+  final double environmentPressureHpa;
+  final double relativeHumidityPercent;
+  final double isaTemperatureC;
+  final double isaPressureHpa;
+  final double isaDensityKgM3;
+  final double temperatureDeviationC;
+  final double pressureDeviationHpa;
+  final double pressureDeviationPercent;
+  final double densityDeviationKgM3;
+  final double densityDeviationPercent;
+  final double saturationVaporPressureHpa;
+  final double vaporPressureHpa;
+  final double dryAirPartialPressureHpa;
+  final double humidAirDensityKgM3;
+  final double densityAltitudeM;
+  final double densityAltitudeDifferenceM;
+  final String atmosphereStatus;
+  final bool isAtmosphereWithinSupportedLimits;
+
+  final double windSpeedKmh;
+  final double windSpeedMs;
+  final String windDirection;
+  final double headwindComponentMs;
+  final double tailwindComponentMs;
+  final double crosswindComponentMs;
+  final String crosswindDirection;
+  final double commandedAirspeedMs;
+  final double effectiveAirspeedMs;
+  final double estimatedGroundSpeedMs;
+  final String windIntensityStatus;
+  final String windSafetyStatus;
+  final bool isWindWithinSupportedLimits;
+
   final String wingLoadingStatus;
   final String powerToWeightStatus;
   final String thrustToWeightStatus;
@@ -150,6 +186,39 @@ class AnalysisResult {
     required this.batteryRecommendationTitle,
     required this.batteryRecommendationMessage,
     required this.isBatteryRecommendationSafe,
+    required this.geometricAltitudeM,
+    required this.environmentTemperatureC,
+    required this.environmentPressureHpa,
+    required this.relativeHumidityPercent,
+    required this.isaTemperatureC,
+    required this.isaPressureHpa,
+    required this.isaDensityKgM3,
+    required this.temperatureDeviationC,
+    required this.pressureDeviationHpa,
+    required this.pressureDeviationPercent,
+    required this.densityDeviationKgM3,
+    required this.densityDeviationPercent,
+    required this.saturationVaporPressureHpa,
+    required this.vaporPressureHpa,
+    required this.dryAirPartialPressureHpa,
+    required this.humidAirDensityKgM3,
+    required this.densityAltitudeM,
+    required this.densityAltitudeDifferenceM,
+    required this.atmosphereStatus,
+    required this.isAtmosphereWithinSupportedLimits,
+    this.windSpeedKmh = 0.0,
+    this.windSpeedMs = 0.0,
+    this.windDirection = 'Sakin',
+    this.headwindComponentMs = 0.0,
+    this.tailwindComponentMs = 0.0,
+    this.crosswindComponentMs = 0.0,
+    this.crosswindDirection = 'Yok',
+    this.commandedAirspeedMs = 0.0,
+    this.effectiveAirspeedMs = 0.0,
+    this.estimatedGroundSpeedMs = 0.0,
+    this.windIntensityStatus = 'Sakin',
+    this.windSafetyStatus = 'Güvenli - sakin hava',
+    this.isWindWithinSupportedLimits = true,
     required this.wingLoadingStatus,
     required this.powerToWeightStatus,
     required this.thrustToWeightStatus,

@@ -274,6 +274,137 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## Sprint 12 - Professional Battery System Analysis Engine
+
+### Added
+
+- BatteryChemistryService
+- BatteryElectricalService
+- BatteryDischargeCurveService
+- BatterySystemService
+- BatteryScoreService
+- BatteryRecommendationService
+- Battery chemistry model
+- Cell and pack voltage model
+- Full pack voltage calculation
+- Nominal pack voltage calculation
+- Minimum safe pack voltage calculation
+- Cell internal resistance model
+- Pack internal resistance calculation
+- Average voltage sag calculation
+- Peak voltage sag calculation
+- Average loaded voltage calculation
+- Peak loaded voltage calculation
+- Average battery current calculation
+- Peak battery current calculation
+- Average C-rate calculation
+- Peak C-rate calculation
+- Battery load efficiency calculation
+- Real usable battery energy calculation
+- Real flight time calculation
+- Battery system safety evaluation
+- Battery score calculation
+- Battery safety recommendation engine
+- Persistent battery internal resistance parameter
+- Professional battery result reporting
+
+### Improved
+
+- AnalysisService
+- AnalysisResult model
+- Aircraft model
+- AircraftEntity
+- AircraftMapper
+- Aircraft creation and edit workflow
+- Battery validation
+- Flight time estimation accuracy
+- Battery current estimation accuracy
+- Battery safety analysis
+- Battery recommendation reporting
+- Energy and battery result interface
+
+---
+
+## Sprint 13 - Atmosphere & Wind System
+
+### Added
+
+- AtmosphereSystemResult model
+- AtmosphereSystemService
+- WindSystemResult model
+- WindSystemService
+- Moist air density calculation
+- Saturation vapor pressure calculation
+- Water vapor partial pressure calculation
+- Dry air partial pressure calculation
+- ISA temperature comparison
+- ISA pressure comparison
+- ISA density comparison
+- Temperature deviation calculation
+- Pressure deviation calculation
+- Density deviation calculation
+- Density altitude calculation
+- Density altitude difference calculation
+- Atmosphere status evaluation
+- Atmosphere supported-limits validation
+- Wind speed conversion from km/h to m/s
+- Headwind component calculation
+- Tailwind component calculation
+- Crosswind component calculation
+- Crosswind direction reporting
+- Effective airspeed calculation
+- Estimated ground speed calculation
+- Wind intensity classification
+- Wind safety evaluation
+- Wind supported-limits validation
+- Professional Atmosphere Analysis report section
+- Professional Wind System Analysis report section
+- Atmosphere and wind recommendation integration
+- Atmosphere and wind aerodynamic score integration
+- Atmosphere service unit tests
+- Wind service unit tests
+- Atmosphere integration tests
+- Wind integration tests
+
+### Improved
+
+- AnalysisService
+- AnalysisResult model
+- RecommendationService
+- ScoreService
+- Aerodynamic density integration
+- Thrust density integration
+- Mission power atmosphere integration
+- Vehicle-type-aware wind analysis
+- Engineering recommendation accuracy
+- Engineering score realism
+- Worst-case atmosphere evaluation
+- Wind risk reporting
+- Professional engineering result interface
+- Density altitude display formatting
+
+### Validated
+
+- Normal sea-level atmosphere test
+- High-altitude and high-temperature atmosphere test
+- Maximum humidity atmosphere test
+- Calm wind test
+- Headwind test
+- Tailwind test
+- Left crosswind test
+- Right crosswind test
+- Worst-case atmosphere test
+- Atmosphere recommendation test
+- Wind recommendation test
+- Atmosphere score penalty test
+- Wind score penalty test
+- Fixed-wing real vehicle test
+- Flutter static analysis
+- Automated test suite
+
+
+---
+
 ## Current Engineering Capabilities
 
 ### Aerodynamics
