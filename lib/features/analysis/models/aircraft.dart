@@ -17,6 +17,19 @@ class Aircraft {
   final String batteryType;
   final int batteryCellCount;
 
+  // Sprint 14D
+  //
+  // Komponent veritabanından seçilen kayıtların kimlikleri.
+  //
+  // Bu alanların tamamı isteğe bağlıdır. Null olduklarında AeroLab mevcut
+  // manuel giriş alanlarını kullanmaya devam eder. Böylece önceki kayıtlar,
+  // analizler ve manuel çalışma akışı geriye dönük olarak korunur.
+  final String? motorComponentId;
+  final String? propellerComponentId;
+  final String? batteryComponentId;
+  final String? escComponentId;
+  final String? motorPropellerCombinationId;
+
   // Sprint 12A
   //
   // Hücre başına iç direnç değeri mΩ cinsindedir.
@@ -63,6 +76,11 @@ class Aircraft {
     required this.batteryVoltageV,
     required this.batteryType,
     required this.batteryCellCount,
+    this.motorComponentId,
+    this.propellerComponentId,
+    this.batteryComponentId,
+    this.escComponentId,
+    this.motorPropellerCombinationId,
     double? cellInternalResistanceMilliOhm,
     this.cruiseSpeedMs = 15.0,
     this.zeroLiftDragCoefficient = 0.030,
@@ -77,6 +95,39 @@ class Aircraft {
            _defaultCellInternalResistanceMilliOhm(batteryType),
        continuousMotorPowerW = continuousMotorPowerW ?? motorPowerW,
        maximumMotorPowerW = maximumMotorPowerW ?? motorPowerW;
+
+  /// Komponent veritabanından bir motor seçilip seçilmediğini gösterir.
+  bool get hasSelectedMotorComponent => _hasComponentId(motorComponentId);
+
+  /// Komponent veritabanından bir pervane seçilip seçilmediğini gösterir.
+  bool get hasSelectedPropellerComponent =>
+      _hasComponentId(propellerComponentId);
+
+  /// Komponent veritabanından bir batarya seçilip seçilmediğini gösterir.
+  bool get hasSelectedBatteryComponent => _hasComponentId(batteryComponentId);
+
+  /// Komponent veritabanından bir ESC seçilip seçilmediğini gösterir.
+  bool get hasSelectedEscComponent => _hasComponentId(escComponentId);
+
+  /// Gerçek motor-pervane test tablosu seçilip seçilmediğini gösterir.
+  bool get hasSelectedMotorPropellerCombination =>
+      _hasComponentId(motorPropellerCombinationId);
+
+  /// Araçta en az bir veritabanı komponenti seçildiğini gösterir.
+  bool get usesComponentDatabase =>
+      hasSelectedMotorComponent ||
+      hasSelectedPropellerComponent ||
+      hasSelectedBatteryComponent ||
+      hasSelectedEscComponent ||
+      hasSelectedMotorPropellerCombination;
+
+  /// Hiçbir komponent seçilmediyse manuel giriş akışının kullanıldığını
+  /// gösterir.
+  bool get usesManualComponentInputs => !usesComponentDatabase;
+
+  static bool _hasComponentId(String? componentId) {
+    return componentId != null && componentId.trim().isNotEmpty;
+  }
 
   static double _defaultCellInternalResistanceMilliOhm(String batteryType) {
     final normalizedType = batteryType

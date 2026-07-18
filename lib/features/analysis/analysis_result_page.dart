@@ -34,6 +34,7 @@ class AnalysisResultPage extends StatelessWidget {
                 _buildWindSection(),
                 _buildAerodynamicSection(),
                 _buildPropulsionSection(),
+                _buildComponentValidationSection(),
                 _buildMissionPowerSection(),
                 _buildEnergySection(),
                 _buildBatteryRecommendationSection(),
@@ -553,6 +554,283 @@ class AnalysisResultPage extends StatelessWidget {
     );
   }
 
+  Widget _buildComponentValidationSection() {
+    final statusColor = _componentCompatibilityColor(
+      result.componentCompatibilityStatus,
+      result.isComponentSelectionCompatible,
+    );
+
+    if (!result.usesComponentDatabase) {
+      return ResultSection(
+        title: 'Component Validation',
+        icon: Icons.fact_check_outlined,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: const Color(0xFF627D98).withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFF627D98).withValues(alpha: 0.25),
+            ),
+          ),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.edit_note_outlined,
+                color: Color(0xFF627D98),
+                size: 30,
+              ),
+              SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Manuel komponent girişi kullanılıyor',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF243B53),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Gerçek motor–pervane test tablosu seçilmediği için '
+                      'komponent performans doğrulaması uygulanmadı. Mevcut '
+                      'analiz sonuçları manuel mühendislik girdileri üzerinden '
+                      'hesaplanmıştır.',
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.5,
+                        color: Color(0xFF486581),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ResultSection(
+      title: 'Component Validation',
+      icon: Icons.fact_check_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: statusColor.withValues(alpha: 0.30)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  result.isComponentSelectionCompatible
+                      ? Icons.verified_outlined
+                      : Icons.error_outline,
+                  color: statusColor,
+                  size: 34,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        result.componentCompatibilityStatus,
+                        style: TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w700,
+                          color: statusColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        result.componentCompatibilityMessage,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          height: 1.5,
+                          color: Color(0xFF486581),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          _buildGrid([
+            ResultCard(
+              title: 'Compatibility Score',
+              value: '${result.componentCompatibilityScore}/100',
+              color: _scoreColor(result.componentCompatibilityScore),
+            ),
+            ResultCard(
+              title: 'Real Test Data',
+              value: result.hasRealMotorPropellerData ? 'Mevcut' : 'Bulunamadı',
+              color: result.hasRealMotorPropellerData
+                  ? Colors.green
+                  : Colors.red,
+            ),
+            ResultCard(
+              title: 'Test Voltage',
+              value: result.hasRealMotorPropellerData
+                  ? '${result.realTestVoltageV.toStringAsFixed(1)} V'
+                  : 'Uygulanamaz',
+              color: result.hasRealMotorPropellerData
+                  ? const Color(0xFF0B3D91)
+                  : const Color(0xFF627D98),
+            ),
+            ResultCard(
+              title: 'Maximum Thrust / Motor',
+              value: result.hasRealMotorPropellerData
+                  ? '${result.realTestMaximumThrustPerMotorN.toStringAsFixed(2)} N'
+                  : 'Uygulanamaz',
+            ),
+            ResultCard(
+              title: 'Total Maximum Thrust',
+              value: result.hasRealMotorPropellerData
+                  ? '${result.realTestTotalMaximumThrustN.toStringAsFixed(2)} N'
+                  : 'Uygulanamaz',
+            ),
+            ResultCard(
+              title: 'Real Thrust / Weight',
+              value: result.hasRealMotorPropellerData
+                  ? result.realTestThrustToWeight.toStringAsFixed(2)
+                  : 'Uygulanamaz',
+              color: result.hasRealMotorPropellerData
+                  ? _realThrustToWeightColor(result.realTestThrustToWeight)
+                  : const Color(0xFF627D98),
+            ),
+            ResultCard(
+              title: 'Maximum Current / Motor',
+              value: result.hasRealMotorPropellerData
+                  ? '${result.realTestMaximumCurrentPerMotorA.toStringAsFixed(2)} A'
+                  : 'Uygulanamaz',
+            ),
+            ResultCard(
+              title: 'Total Maximum Current',
+              value: result.hasRealMotorPropellerData
+                  ? '${result.realTestTotalMaximumCurrentA.toStringAsFixed(2)} A'
+                  : 'Uygulanamaz',
+            ),
+            ResultCard(
+              title: 'Maximum Power / Motor',
+              value: result.hasRealMotorPropellerData
+                  ? '${result.realTestMaximumPowerPerMotorW.toStringAsFixed(1)} W'
+                  : 'Uygulanamaz',
+            ),
+            ResultCard(
+              title: 'Total Maximum Power',
+              value: result.hasRealMotorPropellerData
+                  ? '${result.realTestTotalMaximumPowerW.toStringAsFixed(1)} W'
+                  : 'Uygulanamaz',
+            ),
+          ]),
+          const SizedBox(height: 24),
+          const Text(
+            'Selected Components',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF102A43),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _buildGrid([
+            ResultCard(
+              title: 'Motor Component',
+              value: result.motorComponentId ?? 'Belirtilmedi',
+              color: const Color(0xFF0B3D91),
+            ),
+            ResultCard(
+              title: 'Propeller Component',
+              value: result.propellerComponentId ?? 'Belirtilmedi',
+              color: const Color(0xFF0B3D91),
+            ),
+            ResultCard(
+              title: 'Motor–Propeller Table',
+              value: result.motorPropellerCombinationId ?? 'Belirtilmedi',
+              color: const Color(0xFF0B3D91),
+            ),
+          ]),
+          const SizedBox(height: 18),
+          _buildComponentSourceCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComponentSourceCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFD9E2EC)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.source_outlined, color: Color(0xFF0B3D91)),
+              SizedBox(width: 9),
+              Text(
+                'Test Data Source',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF243B53),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            result.componentDataSource,
+            style: const TextStyle(
+              fontSize: 15,
+              height: 1.45,
+              color: Color(0xFF486581),
+            ),
+          ),
+          if (result.componentTestConditions.trim().isNotEmpty) ...[
+            const SizedBox(height: 14),
+            const Text(
+              'Test Conditions',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF627D98),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              result.componentTestConditions,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.45,
+                color: Color(0xFF486581),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildMissionPowerSection() {
     final powerCards = <Widget>[
       ResultCard(
@@ -977,6 +1255,32 @@ class AnalysisResultPage extends StatelessWidget {
     }
 
     return 'Kritik Güç Rezervi';
+  }
+
+  Color _componentCompatibilityColor(String status, bool isCompatible) {
+    if (!isCompatible) {
+      return Colors.red;
+    }
+
+    final normalizedStatus = status.toLowerCase();
+
+    if (normalizedStatus.contains('koşullu')) {
+      return Colors.orange;
+    }
+
+    return Colors.green;
+  }
+
+  Color _realThrustToWeightColor(double ratio) {
+    if (ratio >= 1.0) {
+      return Colors.green;
+    }
+
+    if (ratio >= 0.6) {
+      return Colors.orange;
+    }
+
+    return Colors.red;
   }
 
   Color _densityAltitudeColor(double differenceM) {

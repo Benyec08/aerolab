@@ -237,6 +237,12 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
       cellInternalResistanceMilliOhm: _toDouble(
         _cellInternalResistanceController,
       ),
+      motorComponentId: widget.initialAircraft?.motorComponentId,
+      propellerComponentId: widget.initialAircraft?.propellerComponentId,
+      batteryComponentId: widget.initialAircraft?.batteryComponentId,
+      escComponentId: widget.initialAircraft?.escComponentId,
+      motorPropellerCombinationId:
+          widget.initialAircraft?.motorPropellerCombinationId,
     );
 
     final altitudeM = _toDouble(_altitudeController);

@@ -23,6 +23,8 @@ Diğer servisleri çağırarak analiz sonucunu oluşturur.
 import '../models/aircraft.dart';
 import '../models/environment.dart';
 import '../models/analysis_result.dart';
+import '../../components/data/motor_propeller/motor_propeller_data_catalog.dart';
+import '../../components/models/motor_propeller_combination.dart';
 
 import 'air_density_service.dart';
 import 'stall_service.dart';
@@ -170,6 +172,11 @@ class AnalysisService {
     );
 
     final String thrustToWeightStatus = _thrustService.evaluate(thrustToWeight);
+
+    // Sprint 14E: Seçilen gerçek motor-pervane test tablosu, manuel
+    // mühendislik hesaplarını değiştirmeden ek bir doğrulama katmanı olarak
+    // değerlendirilir.
+    final componentAnalysis = _analyzeComponentSelection(aircraft);
 
     final double stallSpeed = hasFixedWingAerodynamics
         ? stallService.calculate(
@@ -421,6 +428,27 @@ class AnalysisService {
       windIntensityStatus: windSystemResult.windIntensityStatus,
       windSafetyStatus: windSystemResult.windSafetyStatus,
       isWindWithinSupportedLimits: windSystemResult.isWindWithinSupportedLimits,
+      usesComponentDatabase: aircraft.usesComponentDatabase,
+      hasRealMotorPropellerData: componentAnalysis.hasRealData,
+      motorComponentId: componentAnalysis.motorComponentId,
+      propellerComponentId: componentAnalysis.propellerComponentId,
+      motorPropellerCombinationId:
+          componentAnalysis.motorPropellerCombinationId,
+      componentDataSource: componentAnalysis.dataSource,
+      componentTestConditions: componentAnalysis.testConditions,
+      realTestMaximumThrustPerMotorN: componentAnalysis.maximumThrustPerMotorN,
+      realTestTotalMaximumThrustN: componentAnalysis.totalMaximumThrustN,
+      realTestMaximumCurrentPerMotorA:
+          componentAnalysis.maximumCurrentPerMotorA,
+      realTestTotalMaximumCurrentA: componentAnalysis.totalMaximumCurrentA,
+      realTestMaximumPowerPerMotorW: componentAnalysis.maximumPowerPerMotorW,
+      realTestTotalMaximumPowerW: componentAnalysis.totalMaximumPowerW,
+      realTestVoltageV: componentAnalysis.testVoltageV,
+      realTestThrustToWeight: componentAnalysis.thrustToWeight,
+      componentCompatibilityScore: componentAnalysis.compatibilityScore,
+      componentCompatibilityStatus: componentAnalysis.compatibilityStatus,
+      componentCompatibilityMessage: componentAnalysis.compatibilityMessage,
+      isComponentSelectionCompatible: componentAnalysis.isCompatible,
       wingLoadingStatus: wingLoadingStatus,
       powerToWeightStatus: powerToWeightStatus,
       thrustToWeightStatus: thrustToWeightStatus,
@@ -433,4 +461,218 @@ class AnalysisService {
       recommendation: recommendation,
     );
   }
+
+  _ComponentAnalysisSnapshot _analyzeComponentSelection(Aircraft aircraft) {
+    final combinationId = aircraft.motorPropellerCombinationId;
+
+    if (combinationId == null || combinationId.trim().isEmpty) {
+      return const _ComponentAnalysisSnapshot.manual();
+    }
+
+    final combination = MotorPropellerDataCatalog.findById(combinationId);
+
+    if (combination == null) {
+      return _ComponentAnalysisSnapshot(
+        hasRealData: false,
+        motorComponentId: aircraft.motorComponentId,
+        propellerComponentId: aircraft.propellerComponentId,
+        motorPropellerCombinationId: combinationId,
+        dataSource: 'Katalog kaydı bulunamadı',
+        testConditions: '',
+        maximumThrustPerMotorN: 0,
+        totalMaximumThrustN: 0,
+        maximumCurrentPerMotorA: 0,
+        totalMaximumCurrentA: 0,
+        maximumPowerPerMotorW: 0,
+        totalMaximumPowerW: 0,
+        testVoltageV: 0,
+        thrustToWeight: 0,
+        compatibilityScore: 0,
+        compatibilityStatus: 'Uyumsuz',
+        compatibilityMessage:
+            'Seçilen motor-pervane kombinasyonu katalogda bulunamadı.',
+        isCompatible: false,
+      );
+    }
+
+    return _evaluateRealCombination(
+      aircraft: aircraft,
+      combination: combination,
+    );
+  }
+
+  _ComponentAnalysisSnapshot _evaluateRealCombination({
+    required Aircraft aircraft,
+    required MotorPropellerCombination combination,
+  }) {
+    final issues = <String>[];
+    var score = 100;
+    var hasCriticalIssue = false;
+
+    final selectedMotorId = aircraft.motorComponentId;
+    if (selectedMotorId != null &&
+        selectedMotorId.trim().isNotEmpty &&
+        selectedMotorId != combination.motorComponentId) {
+      score -= 35;
+      hasCriticalIssue = true;
+      issues.add('Motor kimliği test tablosuyla eşleşmiyor.');
+    }
+
+    final selectedPropellerId = aircraft.propellerComponentId;
+    if (selectedPropellerId != null &&
+        selectedPropellerId.trim().isNotEmpty &&
+        selectedPropellerId != combination.propellerComponentId) {
+      score -= 35;
+      hasCriticalIssue = true;
+      issues.add('Pervane kimliği test tablosuyla eşleşmiyor.');
+    }
+
+    final voltageToleranceV = aircraft.batteryVoltageV * 0.03 > 0.5
+        ? aircraft.batteryVoltageV * 0.03
+        : 0.5;
+
+    final hasMatchingVoltage = combination.performancePoints.any(
+      (point) =>
+          (point.voltageV - aircraft.batteryVoltageV).abs() <=
+          voltageToleranceV,
+    );
+
+    if (!hasMatchingVoltage) {
+      score -= 20;
+      issues.add('Batarya voltajı test tablosu voltajıyla eşleşmiyor.');
+    }
+
+    final totalMaximumPowerW =
+        combination.maximumElectricalPowerW * aircraft.motorCount;
+
+    if (aircraft.maximumMotorPowerW > totalMaximumPowerW * 1.10) {
+      score -= 15;
+      issues.add('Manuel maksimum güç, gerçek test tablosu değerinden yüksek.');
+    }
+
+    final catalogDiameterInch = _extractPropellerDiameter(
+      combination.propellerComponentId,
+    );
+
+    if (catalogDiameterInch != null &&
+        (catalogDiameterInch - aircraft.propellerDiameterInch).abs() > 0.25) {
+      score -= 25;
+      hasCriticalIssue = true;
+      issues.add('Manuel pervane çapı seçilen test tablosuyla eşleşmiyor.');
+    }
+
+    score = score.clamp(0, 100);
+
+    final totalMaximumThrustN =
+        combination.maximumThrustN * aircraft.motorCount;
+    final totalMaximumCurrentA =
+        combination.maximumCurrentA * aircraft.motorCount;
+    final weightN = aircraft.weightKg * 9.80665;
+    final realThrustToWeight = weightN > 0
+        ? totalMaximumThrustN / weightN
+        : 0.0;
+
+    final isCompatible = !hasCriticalIssue && score >= 60;
+    final status = !isCompatible
+        ? 'Uyumsuz'
+        : issues.isEmpty
+        ? 'Uyumlu'
+        : 'Koşullu Uyumlu';
+
+    final message = issues.isEmpty
+        ? 'Seçilen motor-pervane tablosu araç girdileriyle uyumludur.'
+        : issues.join(' ');
+
+    return _ComponentAnalysisSnapshot(
+      hasRealData: true,
+      motorComponentId: combination.motorComponentId,
+      propellerComponentId: combination.propellerComponentId,
+      motorPropellerCombinationId: combination.id,
+      dataSource: combination.dataSource,
+      testConditions: combination.testConditions,
+      maximumThrustPerMotorN: combination.maximumThrustN,
+      totalMaximumThrustN: totalMaximumThrustN,
+      maximumCurrentPerMotorA: combination.maximumCurrentA,
+      totalMaximumCurrentA: totalMaximumCurrentA,
+      maximumPowerPerMotorW: combination.maximumElectricalPowerW,
+      totalMaximumPowerW: totalMaximumPowerW,
+      testVoltageV: combination.maximumThrottlePoint.voltageV,
+      thrustToWeight: realThrustToWeight,
+      compatibilityScore: score,
+      compatibilityStatus: status,
+      compatibilityMessage: message,
+      isCompatible: isCompatible,
+    );
+  }
+
+  double? _extractPropellerDiameter(String propellerComponentId) {
+    final match = RegExp(
+      r'(?:^|-)p(\d+(?:\.\d+)?)x',
+      caseSensitive: false,
+    ).firstMatch(propellerComponentId);
+
+    return double.tryParse(match?.group(1) ?? '');
+  }
+}
+
+class _ComponentAnalysisSnapshot {
+  final bool hasRealData;
+  final String? motorComponentId;
+  final String? propellerComponentId;
+  final String? motorPropellerCombinationId;
+  final String dataSource;
+  final String testConditions;
+  final double maximumThrustPerMotorN;
+  final double totalMaximumThrustN;
+  final double maximumCurrentPerMotorA;
+  final double totalMaximumCurrentA;
+  final double maximumPowerPerMotorW;
+  final double totalMaximumPowerW;
+  final double testVoltageV;
+  final double thrustToWeight;
+  final int compatibilityScore;
+  final String compatibilityStatus;
+  final String compatibilityMessage;
+  final bool isCompatible;
+
+  const _ComponentAnalysisSnapshot({
+    required this.hasRealData,
+    required this.motorComponentId,
+    required this.propellerComponentId,
+    required this.motorPropellerCombinationId,
+    required this.dataSource,
+    required this.testConditions,
+    required this.maximumThrustPerMotorN,
+    required this.totalMaximumThrustN,
+    required this.maximumCurrentPerMotorA,
+    required this.totalMaximumCurrentA,
+    required this.maximumPowerPerMotorW,
+    required this.totalMaximumPowerW,
+    required this.testVoltageV,
+    required this.thrustToWeight,
+    required this.compatibilityScore,
+    required this.compatibilityStatus,
+    required this.compatibilityMessage,
+    required this.isCompatible,
+  });
+
+  const _ComponentAnalysisSnapshot.manual()
+    : hasRealData = false,
+      motorComponentId = null,
+      propellerComponentId = null,
+      motorPropellerCombinationId = null,
+      dataSource = 'Manuel giriş',
+      testConditions = '',
+      maximumThrustPerMotorN = 0,
+      totalMaximumThrustN = 0,
+      maximumCurrentPerMotorA = 0,
+      totalMaximumCurrentA = 0,
+      maximumPowerPerMotorW = 0,
+      totalMaximumPowerW = 0,
+      testVoltageV = 0,
+      thrustToWeight = 0,
+      compatibilityScore = 100,
+      compatibilityStatus = 'Manuel Giriş',
+      compatibilityMessage = 'Komponent veritabanı seçimi kullanılmadı.',
+      isCompatible = true;
 }

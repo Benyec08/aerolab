@@ -18,6 +18,11 @@ class AircraftMapper {
       batteryVoltageV: entity.batteryVoltageV,
       batteryType: entity.batteryType,
       batteryCellCount: entity.batteryCellCount,
+      motorComponentId: entity.motorComponentId,
+      propellerComponentId: entity.propellerComponentId,
+      batteryComponentId: entity.batteryComponentId,
+      escComponentId: entity.escComponentId,
+      motorPropellerCombinationId: entity.motorPropellerCombinationId,
       cellInternalResistanceMilliOhm: entity.cellInternalResistanceMilliOhm > 0
           ? entity.cellInternalResistanceMilliOhm
           : null,
@@ -66,6 +71,11 @@ class AircraftMapper {
       continuousMotorPowerW: model.continuousMotorPowerW,
       maximumMotorPowerW: model.maximumMotorPowerW,
       cellInternalResistanceMilliOhm: model.cellInternalResistanceMilliOhm,
+      motorComponentId: model.motorComponentId,
+      propellerComponentId: model.propellerComponentId,
+      batteryComponentId: model.batteryComponentId,
+      escComponentId: model.escComponentId,
+      motorPropellerCombinationId: model.motorPropellerCombinationId,
     );
   }
 }

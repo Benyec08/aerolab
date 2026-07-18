@@ -97,6 +97,7 @@ class AnalysisResult {
   final String atmosphereStatus;
   final bool isAtmosphereWithinSupportedLimits;
 
+  // Sprint 13B
   final double windSpeedKmh;
   final double windSpeedMs;
   final String windDirection;
@@ -110,6 +111,38 @@ class AnalysisResult {
   final String windIntensityStatus;
   final String windSafetyStatus;
   final bool isWindWithinSupportedLimits;
+
+  // Sprint 14E
+  //
+  // Gerçek motor-pervane performans tablosunun araç analizine aktarılması.
+  // Bu alanlar varsayılan değerlere sahip olduğu için manuel analiz akışı ve
+  // eski AnalysisResult oluşturma noktaları geriye dönük olarak korunur.
+  final bool usesComponentDatabase;
+  final bool hasRealMotorPropellerData;
+  final String? motorComponentId;
+  final String? propellerComponentId;
+  final String? motorPropellerCombinationId;
+  final String componentDataSource;
+  final String componentTestConditions;
+
+  /// Seçilen test tablosundaki tek motor için maksimum itki.
+  final double realTestMaximumThrustPerMotorN;
+
+  /// Motor sayısı dikkate alınarak hesaplanan toplam maksimum gerçek itki.
+  final double realTestTotalMaximumThrustN;
+
+  final double realTestMaximumCurrentPerMotorA;
+  final double realTestTotalMaximumCurrentA;
+  final double realTestMaximumPowerPerMotorW;
+  final double realTestTotalMaximumPowerW;
+  final double realTestVoltageV;
+  final double realTestThrustToWeight;
+
+  /// Gerçek test tablosu ile manuel araç girdilerinin uyumluluk puanı.
+  final int componentCompatibilityScore;
+  final String componentCompatibilityStatus;
+  final String componentCompatibilityMessage;
+  final bool isComponentSelectionCompatible;
 
   final String wingLoadingStatus;
   final String powerToWeightStatus;
@@ -219,6 +252,26 @@ class AnalysisResult {
     this.windIntensityStatus = 'Sakin',
     this.windSafetyStatus = 'Güvenli - sakin hava',
     this.isWindWithinSupportedLimits = true,
+    this.usesComponentDatabase = false,
+    this.hasRealMotorPropellerData = false,
+    this.motorComponentId,
+    this.propellerComponentId,
+    this.motorPropellerCombinationId,
+    this.componentDataSource = 'Manuel giriş',
+    this.componentTestConditions = '',
+    this.realTestMaximumThrustPerMotorN = 0.0,
+    this.realTestTotalMaximumThrustN = 0.0,
+    this.realTestMaximumCurrentPerMotorA = 0.0,
+    this.realTestTotalMaximumCurrentA = 0.0,
+    this.realTestMaximumPowerPerMotorW = 0.0,
+    this.realTestTotalMaximumPowerW = 0.0,
+    this.realTestVoltageV = 0.0,
+    this.realTestThrustToWeight = 0.0,
+    this.componentCompatibilityScore = 100,
+    this.componentCompatibilityStatus = 'Manuel Giriş',
+    this.componentCompatibilityMessage =
+        'Komponent veritabanı seçimi kullanılmadı.',
+    this.isComponentSelectionCompatible = true,
     required this.wingLoadingStatus,
     required this.powerToWeightStatus,
     required this.thrustToWeightStatus,

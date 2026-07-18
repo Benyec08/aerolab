@@ -101,6 +101,27 @@ class AircraftEntity {
   @HiveField(24, defaultValue: 0.0)
   final double cellInternalResistanceMilliOhm;
 
+  // Sprint 14D
+  //
+  // Komponent veritabanından seçilen kayıtların kimlikleri.
+  //
+  // Nullable alanlar sayesinde eski Hive kayıtları ve manuel giriş akışı
+  // geriye dönük olarak korunur.
+  @HiveField(25)
+  final String? motorComponentId;
+
+  @HiveField(26)
+  final String? propellerComponentId;
+
+  @HiveField(27)
+  final String? batteryComponentId;
+
+  @HiveField(28)
+  final String? escComponentId;
+
+  @HiveField(29)
+  final String? motorPropellerCombinationId;
+
   AircraftEntity({
     required this.id,
     required this.name,
@@ -127,6 +148,11 @@ class AircraftEntity {
     double? continuousMotorPowerW,
     double? maximumMotorPowerW,
     double? cellInternalResistanceMilliOhm,
+    this.motorComponentId,
+    this.propellerComponentId,
+    this.batteryComponentId,
+    this.escComponentId,
+    this.motorPropellerCombinationId,
   }) : continuousMotorPowerW =
            continuousMotorPowerW == null || continuousMotorPowerW <= 0
            ? motorPowerW
@@ -164,6 +190,11 @@ class AircraftEntity {
     double? continuousMotorPowerW,
     double? maximumMotorPowerW,
     double? cellInternalResistanceMilliOhm,
+    String? motorComponentId,
+    String? propellerComponentId,
+    String? batteryComponentId,
+    String? escComponentId,
+    String? motorPropellerCombinationId,
   }) {
     final now = DateTime.now();
 
@@ -193,6 +224,11 @@ class AircraftEntity {
       continuousMotorPowerW: continuousMotorPowerW,
       maximumMotorPowerW: maximumMotorPowerW,
       cellInternalResistanceMilliOhm: cellInternalResistanceMilliOhm,
+      motorComponentId: motorComponentId,
+      propellerComponentId: propellerComponentId,
+      batteryComponentId: batteryComponentId,
+      escComponentId: escComponentId,
+      motorPropellerCombinationId: motorPropellerCombinationId,
     );
   }
 
@@ -222,6 +258,11 @@ class AircraftEntity {
     double? continuousMotorPowerW,
     double? maximumMotorPowerW,
     double? cellInternalResistanceMilliOhm,
+    String? motorComponentId,
+    String? propellerComponentId,
+    String? batteryComponentId,
+    String? escComponentId,
+    String? motorPropellerCombinationId,
   }) {
     final updatedMotorPowerW = motorPowerW ?? this.motorPowerW;
 
@@ -256,6 +297,12 @@ class AircraftEntity {
       maximumMotorPowerW: maximumMotorPowerW ?? this.maximumMotorPowerW,
       cellInternalResistanceMilliOhm:
           cellInternalResistanceMilliOhm ?? this.cellInternalResistanceMilliOhm,
+      motorComponentId: motorComponentId ?? this.motorComponentId,
+      propellerComponentId: propellerComponentId ?? this.propellerComponentId,
+      batteryComponentId: batteryComponentId ?? this.batteryComponentId,
+      escComponentId: escComponentId ?? this.escComponentId,
+      motorPropellerCombinationId:
+          motorPropellerCombinationId ?? this.motorPropellerCombinationId,
     );
   }
 
@@ -304,6 +351,13 @@ class AircraftEntity {
         map['cellInternalResistanceMilliOhm'],
         fallback: 0.0,
       ),
+      motorComponentId: _toNullableString(map['motorComponentId']),
+      propellerComponentId: _toNullableString(map['propellerComponentId']),
+      batteryComponentId: _toNullableString(map['batteryComponentId']),
+      escComponentId: _toNullableString(map['escComponentId']),
+      motorPropellerCombinationId: _toNullableString(
+        map['motorPropellerCombinationId'],
+      ),
     );
   }
 
@@ -336,7 +390,22 @@ class AircraftEntity {
       'continuousMotorPowerW': continuousMotorPowerW,
       'maximumMotorPowerW': maximumMotorPowerW,
       'cellInternalResistanceMilliOhm': cellInternalResistanceMilliOhm,
+      'motorComponentId': motorComponentId,
+      'propellerComponentId': propellerComponentId,
+      'batteryComponentId': batteryComponentId,
+      'escComponentId': escComponentId,
+      'motorPropellerCombinationId': motorPropellerCombinationId,
     };
+  }
+
+  static String? _toNullableString(dynamic value) {
+    final normalizedValue = value?.toString().trim();
+
+    if (normalizedValue == null || normalizedValue.isEmpty) {
+      return null;
+    }
+
+    return normalizedValue;
   }
 
   static double _toDouble(dynamic value, {double fallback = 0}) {

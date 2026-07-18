@@ -405,6 +405,124 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## Sprint 14 - Component Database & Real Motor-Propeller Validation
+
+### Added
+
+- MotorComponent model
+- PropellerComponent model
+- BatteryComponent model
+- EscComponent model
+- MotorPropellerCombination model
+- MotorPropellerPerformancePoint model
+- ComponentCompatibilityResult model
+- CompatibilityIssue model
+- CompatibilitySeverity classification
+- Component repository architecture
+- MotorRepository
+- PropellerRepository
+- BatteryComponentRepository
+- EscRepository
+- MotorPropellerCombinationRepository
+- Real motor-propeller performance data catalog
+- T-MOTOR MN501-S KV240 + P14x4.8 performance table
+- T-MOTOR MN3510 KV360 + P15x5 CF performance table
+- T-MOTOR MN4014 KV400 + P15x5 CF performance table
+- Motor-propeller data catalog lookup
+- Persistent motor component identifier
+- Persistent propeller component identifier
+- Persistent battery component identifier
+- Persistent ESC component identifier
+- Persistent motor-propeller combination identifier
+- Hangar motor-propeller data source selector
+- Manual component input mode
+- Real test table selection mode
+- Component selection persistence
+- ComponentCompatibilityService
+- Motor-battery voltage compatibility validation
+- Motor-battery cell count compatibility validation
+- Battery continuous current validation
+- Battery burst current validation
+- Motor-propeller diameter compatibility validation
+- Propeller-motor KV compatibility validation
+- Propeller-battery voltage compatibility validation
+- ESC cell count compatibility validation
+- ESC continuous current validation
+- ESC burst current validation
+- ESC current reserve validation
+- Motor-propeller test table identifier validation
+- Test table voltage validation
+- Component compatibility score
+- Component compatibility status
+- Component compatibility message
+- Real maximum thrust per motor reporting
+- Real total maximum thrust reporting
+- Real maximum current per motor reporting
+- Real total maximum current reporting
+- Real maximum power per motor reporting
+- Real total maximum power reporting
+- Real test voltage reporting
+- Real thrust-to-weight calculation
+- Component Validation result section
+- Test data source reporting
+- Test conditions reporting
+- Selected component identifier reporting
+- Manual component validation information card
+- Real test table compatibility information card
+- Critical component mismatch reporting
+
+### Improved
+
+- Aircraft model
+- AircraftEntity
+- Hive aircraft adapter
+- AircraftMapper
+- Aircraft creation and edit workflow
+- Aircraft Hangar form
+- New Analysis workflow
+- AnalysisService
+- AnalysisResult model
+- Analysis result interface
+- Motor-propeller engineering transparency
+- Real thrust reporting accuracy
+- Component selection traceability
+- Manual input backward compatibility
+- Hangar-to-analysis component data transfer
+- Engineering validation reporting
+
+### Validated
+
+- Component model serialization
+- Component repository lookup
+- Real motor-propeller catalog integrity
+- Thirty real performance data points
+- Aircraft component identifier persistence
+- Aircraft mapper component round-trip
+- Legacy aircraft manual-mode compatibility
+- Compatible motor-propeller selection
+- Missing real test table scenario
+- Motor-battery incompatibility scenario
+- Motor-propeller diameter incompatibility scenario
+- Motor-propeller KV incompatibility scenario
+- ESC current insufficiency scenario
+- Low ESC current reserve warning
+- Test table component identifier mismatch
+- Test table voltage mismatch
+- Manual analysis flow
+- Real test table AnalysisResult integration
+- Multi-motor thrust, current and power scaling
+- Missing catalog combination handling
+- Hangar component selection restoration
+- Hangar-to-analysis component identifier transfer
+- Compatible real application test
+- Incompatible propeller diameter application test
+- Manual component input application test
+- Flutter static analysis
+- Automated test suite
+
+
+---
+
 ## Current Engineering Capabilities
 
 ### Aerodynamics

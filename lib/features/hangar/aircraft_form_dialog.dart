@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../analysis/services/battery_chemistry_service.dart';
 import '../analysis/services/battery_validation_service.dart';
+import '../components/data/motor_propeller/motor_propeller_data_catalog.dart';
+import '../components/models/motor_propeller_combination.dart';
 
 class AircraftFormDialog extends StatefulWidget {
   final Map<String, dynamic>? aircraft;
@@ -49,6 +51,9 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
 
   late String _selectedType;
   late String _selectedBatteryType;
+  String? _selectedMotorPropellerCombinationId;
+
+  late final List<MotorPropellerCombination> _motorPropellerCombinations;
 
   final List<String> _aircraftTypes = const [
     'Sabit Kanat',
@@ -64,6 +69,16 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     super.initState();
 
     final aircraft = widget.aircraft;
+
+    _motorPropellerCombinations = MotorPropellerDataCatalog.createAll();
+
+    final existingCombinationId = aircraft?['motorPropellerCombinationId']
+        ?.toString();
+
+    _selectedMotorPropellerCombinationId =
+        _containsMotorPropellerCombination(existingCombinationId)
+        ? existingCombinationId
+        : null;
 
     final existingType = aircraft?['type']?.toString();
     _selectedType = _aircraftTypes.contains(existingType)
@@ -351,6 +366,43 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     return _parseDouble(controller) / 100.0;
   }
 
+  bool _containsMotorPropellerCombination(String? combinationId) {
+    if (combinationId == null || combinationId.trim().isEmpty) {
+      return false;
+    }
+
+    return _motorPropellerCombinations.any(
+      (combination) => combination.id == combinationId,
+    );
+  }
+
+  MotorPropellerCombination? get _selectedMotorPropellerCombination {
+    final selectedId = _selectedMotorPropellerCombinationId;
+
+    if (selectedId == null) {
+      return null;
+    }
+
+    for (final combination in _motorPropellerCombinations) {
+      if (combination.id == selectedId) {
+        return combination;
+      }
+    }
+
+    return null;
+  }
+
+  String _combinationTitle(MotorPropellerCombination combination) {
+    return '${combination.motorComponentId} + '
+        '${combination.propellerComponentId}';
+  }
+
+  String _combinationSubtitle(MotorPropellerCombination combination) {
+    return '${combination.performancePoints.length} test noktası • '
+        'Maks. ${combination.maximumThrustN.toStringAsFixed(2)} N • '
+        'Maks. ${combination.maximumElectricalPowerW.toStringAsFixed(0)} W';
+  }
+
   void _submitForm() {
     final isValid = _formKey.currentState?.validate() ?? false;
 
@@ -362,6 +414,8 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     final batterySummary = _batteryController.text.trim().isEmpty
         ? '${batteryCellCount}S $_selectedBatteryType'
         : _batteryController.text.trim();
+
+    final selectedCombination = _selectedMotorPropellerCombination;
 
     final result = <String, dynamic>{
       'name': _nameController.text.trim(),
@@ -384,6 +438,11 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
         _cellInternalResistanceController,
       ),
       'propellerDiameter': _parseDouble(_propellerDiameterController),
+      'motorComponentId': selectedCombination?.motorComponentId,
+      'propellerComponentId': selectedCombination?.propellerComponentId,
+      'motorPropellerCombinationId': selectedCombination?.id,
+      'batteryComponentId': widget.aircraft?['batteryComponentId'],
+      'escComponentId': widget.aircraft?['escComponentId'],
       'created': widget.aircraft?['created'] as DateTime? ?? DateTime.now(),
     };
 
@@ -424,6 +483,13 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
                       ),
                       const SizedBox(height: 16),
                       _buildPhysicalProperties(),
+                      const SizedBox(height: 26),
+                      _buildSectionTitle(
+                        icon: Icons.dataset_outlined,
+                        title: 'Komponent Veri Kaynağı',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildMotorPropellerSelection(),
                       const SizedBox(height: 26),
                       _buildSectionTitle(
                         icon: Icons.bolt,
@@ -570,6 +636,108 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildMotorPropellerSelection() {
+    final selectedCombination = _selectedMotorPropellerCombination;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<String?>(
+          key: ValueKey(_selectedMotorPropellerCombinationId),
+          initialValue: _selectedMotorPropellerCombinationId,
+          isExpanded: true,
+          decoration: _inputDecoration(
+            label: 'Motor–Pervane Veri Kaynağı',
+            hint: 'Manuel giriş veya gerçek test tablosu seçin',
+            icon: Icons.table_chart_outlined,
+          ),
+          items: [
+            const DropdownMenuItem<String?>(
+              value: null,
+              child: Text('Manuel giriş'),
+            ),
+            ..._motorPropellerCombinations.map((combination) {
+              return DropdownMenuItem<String?>(
+                value: combination.id,
+                child: Text(
+                  _combinationTitle(combination),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _selectedMotorPropellerCombinationId = value;
+            });
+          },
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0B3D91).withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFF0B3D91).withValues(alpha: 0.14),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                selectedCombination == null
+                    ? Icons.edit_note_outlined
+                    : Icons.verified_outlined,
+                color: const Color(0xFF0B3D91),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      selectedCombination == null
+                          ? 'Manuel komponent girişi'
+                          : 'Gerçek test tablosu seçildi',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF243B53),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      selectedCombination == null
+                          ? 'Motor gücü, verim ve pervane çapı alanları '
+                                'manuel olarak kullanılacaktır.'
+                          : _combinationSubtitle(selectedCombination),
+                      style: const TextStyle(
+                        height: 1.35,
+                        color: Color(0xFF627D98),
+                      ),
+                    ),
+                    if (selectedCombination != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        selectedCombination.dataSource,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          height: 1.3,
+                          color: Color(0xFF829AB1),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
