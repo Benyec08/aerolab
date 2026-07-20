@@ -41,18 +41,13 @@ class AnalysisSection extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const AnalysisSection({
-    super.key,
-    required this.title,
-    required this.child,
-  });
+  const AnalysisSection({super.key, required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         Text(
           title.toUpperCase(),
           style: const TextStyle(
@@ -70,9 +65,7 @@ class AnalysisSection extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: const Color(0xFFD9E2EC),
-            ),
+            border: Border.all(color: const Color(0xFFD9E2EC)),
           ),
           child: child,
         ),

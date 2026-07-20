@@ -35,6 +35,11 @@ class AnalysisResultPage extends StatelessWidget {
                 _buildAerodynamicSection(),
                 _buildPropulsionSection(),
                 _buildComponentValidationSection(),
+                _buildClimbPerformanceSection(),
+                _buildEnduranceRangeSection(),
+                _buildGlidePerformanceSection(),
+                _buildStabilitySection(),
+                _buildFlightEnvelopeSection(),
                 _buildMissionPowerSection(),
                 _buildEnergySection(),
                 _buildBatteryRecommendationSection(),
@@ -831,6 +836,587 @@ class AnalysisResultPage extends StatelessWidget {
     );
   }
 
+  Widget _buildClimbPerformanceSection() {
+    final climb = result.climbPerformance;
+
+    if (!climb.isApplicable) {
+      return ResultSection(
+        title: 'Climb Performance',
+        icon: Icons.trending_up,
+        child: _buildGrid([
+          ResultCard(
+            title: 'Climb Analysis',
+            value: climb.status,
+            color: const Color(0xFF627D98),
+          ),
+          ResultCard(
+            title: 'Explanation',
+            value: climb.message,
+            color: const Color(0xFF627D98),
+          ),
+        ]),
+      );
+    }
+
+    final statusColor = _climbStatusColor(climb.status);
+
+    return ResultSection(
+      title: 'Climb Performance',
+      icon: Icons.trending_up,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGrid([
+            ResultCard(
+              title: 'Available Propulsive Power',
+              value: '${climb.availablePropulsivePowerW.toStringAsFixed(1)} W',
+            ),
+            ResultCard(
+              title: 'Required Level-Flight Power',
+              value: '${climb.requiredLevelFlightPowerW.toStringAsFixed(1)} W',
+            ),
+            ResultCard(
+              title: 'Excess Power',
+              value: '${climb.excessPowerW.toStringAsFixed(1)} W',
+              color: climb.hasPositiveExcessPower ? Colors.green : Colors.red,
+            ),
+            ResultCard(
+              title: 'Rate of Climb',
+              value: '${climb.rateOfClimbMs.toStringAsFixed(2)} m/s',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Rate of Climb',
+              value: '${climb.rateOfClimbFpm.toStringAsFixed(0)} ft/min',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Climb Angle',
+              value: '${climb.climbAngleDeg.toStringAsFixed(1)}°',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Time to 1000 m',
+              value: climb.canClimb
+                  ? '${climb.timeTo1000MMinutes.toStringAsFixed(1)} min'
+                  : 'Ulaşılamaz',
+              color: climb.canClimb ? statusColor : Colors.red,
+            ),
+            ResultCard(
+              title: 'Climb Status',
+              value: climb.status,
+              color: statusColor,
+            ),
+          ]),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: statusColor.withValues(alpha: 0.28)),
+            ),
+            child: Text(
+              climb.message,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.45,
+                color: statusColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _climbStatusColor(String status) {
+    switch (status) {
+      case 'Yüksek Tırmanma':
+      case 'İyi Tırmanma':
+        return Colors.green;
+      case 'Orta Tırmanma':
+        return Colors.orange;
+      case 'Düşük Tırmanma':
+        return const Color(0xFFF59E0B);
+      case 'Tırmanamaz':
+        return Colors.red;
+      default:
+        return const Color(0xFF627D98);
+    }
+  }
+
+  Widget _buildEnduranceRangeSection() {
+    final endurance = result.enduranceRange;
+
+    if (!endurance.isApplicable) {
+      return ResultSection(
+        title: 'Endurance & Range',
+        icon: Icons.route,
+        child: _buildGrid([
+          ResultCard(
+            title: 'Range Analysis',
+            value: endurance.status,
+            color: const Color(0xFF627D98),
+          ),
+          ResultCard(
+            title: 'Explanation',
+            value: endurance.message,
+            color: const Color(0xFF627D98),
+          ),
+        ]),
+      );
+    }
+
+    final statusColor = _enduranceStatusColor(endurance.status);
+
+    return ResultSection(
+      title: 'Endurance & Range',
+      icon: Icons.route,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGrid([
+            ResultCard(
+              title: 'Usable Energy',
+              value: '${endurance.usableEnergyWh.toStringAsFixed(1)} Wh',
+            ),
+            ResultCard(
+              title: 'Cruise Power',
+              value: '${endurance.cruisePowerW.toStringAsFixed(1)} W',
+            ),
+            ResultCard(
+              title: 'Endurance',
+              value: '${endurance.enduranceMinutes.toStringAsFixed(1)} min',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Endurance',
+              value: '${endurance.enduranceHours.toStringAsFixed(2)} h',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Cruise Speed',
+              value: '${endurance.cruiseSpeedKmh.toStringAsFixed(1)} km/h',
+            ),
+            ResultCard(
+              title: 'Ground Speed',
+              value:
+                  '${(endurance.estimatedGroundSpeedMs * 3.6).toStringAsFixed(1)} km/h',
+            ),
+            ResultCard(
+              title: 'Still-Air Range',
+              value: '${endurance.stillAirRangeKm.toStringAsFixed(1)} km',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Wind-Adjusted Range',
+              value: '${endurance.windAdjustedRangeKm.toStringAsFixed(1)} km',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Range Status',
+              value: endurance.status,
+              color: statusColor,
+            ),
+          ]),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: statusColor.withValues(alpha: 0.28)),
+            ),
+            child: Text(
+              endurance.message,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.45,
+                color: statusColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _enduranceStatusColor(String status) {
+    switch (status) {
+      case 'Yüksek':
+      case 'İyi':
+        return Colors.green;
+      case 'Orta':
+        return Colors.orange;
+      case 'Düşük':
+        return const Color(0xFFF59E0B);
+      default:
+        return const Color(0xFF627D98);
+    }
+  }
+
+  Widget _buildGlidePerformanceSection() {
+    final glide = result.glidePerformance;
+
+    if (!glide.isApplicable) {
+      return ResultSection(
+        title: 'Glide Performance',
+        icon: Icons.flight_land,
+        child: _buildGrid([
+          ResultCard(
+            title: 'Glide Analysis',
+            value: glide.status,
+            color: const Color(0xFF627D98),
+          ),
+          ResultCard(
+            title: 'Explanation',
+            value: glide.message,
+            color: const Color(0xFF627D98),
+          ),
+        ]),
+      );
+    }
+
+    final statusColor = _glideStatusColor(glide.status);
+
+    return ResultSection(
+      title: 'Glide Performance',
+      icon: Icons.flight_land,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGrid([
+            ResultCard(
+              title: 'Best Glide Ratio',
+              value: '${glide.bestGlideRatio.toStringAsFixed(1)}:1',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Best Glide Speed',
+              value: '${glide.bestGlideSpeedMs.toStringAsFixed(1)} m/s',
+            ),
+            ResultCard(
+              title: 'Best Glide Speed',
+              value: '${glide.bestGlideSpeedKmh.toStringAsFixed(1)} km/h',
+            ),
+            ResultCard(
+              title: 'Sink Rate',
+              value: '${glide.sinkRateMs.toStringAsFixed(2)} m/s',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Glide Angle',
+              value: '${glide.glideAngleDeg.toStringAsFixed(1)}°',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Distance from 1000 m',
+              value:
+                  '${(glide.glideDistanceFrom1000M / 1000.0).toStringAsFixed(1)} km',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Time from 1000 m',
+              value:
+                  '${glide.glideTimeFrom1000MMinutes.toStringAsFixed(1)} min',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Glide Status',
+              value: glide.status,
+              color: statusColor,
+            ),
+          ]),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: statusColor.withValues(alpha: 0.28)),
+            ),
+            child: Text(
+              glide.message,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.45,
+                color: statusColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _glideStatusColor(String status) {
+    switch (status) {
+      case 'Yüksek':
+      case 'İyi':
+        return Colors.green;
+      case 'Orta':
+        return Colors.orange;
+      case 'Düşük':
+        return const Color(0xFFF59E0B);
+      default:
+        return const Color(0xFF627D98);
+    }
+  }
+
+  Widget _buildStabilitySection() {
+    final stability = result.stability;
+
+    if (!stability.isApplicable) {
+      return ResultSection(
+        title: 'Center of Gravity & Stability',
+        icon: Icons.balance_outlined,
+        child: _buildGrid([
+          ResultCard(
+            title: 'Stability Analysis',
+            value: stability.status,
+            color: const Color(0xFF627D98),
+          ),
+          ResultCard(
+            title: 'Explanation',
+            value: stability.message,
+            color: const Color(0xFF627D98),
+          ),
+        ]),
+      );
+    }
+
+    final statusColor = _stabilityStatusColor(stability.status);
+    final cgLimitText = stability.isCenterOfGravityWithinLimits
+        ? 'Limit İçinde'
+        : 'Limit Dışı';
+    final staticStabilityText = stability.isStaticallyStable
+        ? 'Statik Kararlı'
+        : 'Statik Kararsız';
+
+    return ResultSection(
+      title: 'Center of Gravity & Stability',
+      icon: Icons.balance_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGrid([
+            ResultCard(
+              title: 'CG from MAC Leading Edge',
+              value:
+                  '${stability.centerOfGravityFromLeadingEdgeM.toStringAsFixed(3)} m',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'CG Position',
+              value:
+                  '${stability.centerOfGravityPercentMac.toStringAsFixed(1)}% MAC',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Neutral Point',
+              value:
+                  '${stability.neutralPointFromLeadingEdgeM.toStringAsFixed(3)} m',
+            ),
+            ResultCard(
+              title: 'Neutral Point Position',
+              value:
+                  '${stability.neutralPointPercentMac.toStringAsFixed(1)}% MAC',
+            ),
+            ResultCard(
+              title: 'Static Margin',
+              value: '${stability.staticMarginPercent.toStringAsFixed(1)}%',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'CG Limit Check',
+              value: cgLimitText,
+              color: stability.isCenterOfGravityWithinLimits
+                  ? Colors.green
+                  : Colors.red,
+            ),
+            ResultCard(
+              title: 'Longitudinal Stability',
+              value: staticStabilityText,
+              color: stability.isStaticallyStable ? Colors.green : Colors.red,
+            ),
+            ResultCard(
+              title: 'Stability Status',
+              value: stability.status,
+              color: statusColor,
+            ),
+          ]),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: statusColor.withValues(alpha: 0.28)),
+            ),
+            child: Text(
+              stability.message,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.45,
+                color: statusColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _stabilityStatusColor(String status) {
+    switch (status) {
+      case 'Kararlı':
+        return Colors.green;
+      case 'Aşırı Kararlı':
+        return Colors.blue;
+      case 'Düşük Statik Marj':
+        return Colors.orange;
+      case 'Kararsız':
+      case 'CG Limit Dışı':
+        return Colors.red;
+      default:
+        return const Color(0xFF627D98);
+    }
+  }
+
+  Widget _buildFlightEnvelopeSection() {
+    final envelope = result.flightEnvelope;
+
+    if (!envelope.isApplicable) {
+      return ResultSection(
+        title: 'Flight Envelope',
+        icon: Icons.show_chart_outlined,
+        child: _buildGrid([
+          ResultCard(
+            title: 'Envelope Analysis',
+            value: envelope.status,
+            color: const Color(0xFF627D98),
+          ),
+          ResultCard(
+            title: 'Explanation',
+            value: envelope.message,
+            color: const Color(0xFF627D98),
+          ),
+        ]),
+      );
+    }
+
+    final statusColor = _flightEnvelopeStatusColor(envelope.status);
+
+    return ResultSection(
+      title: 'Flight Envelope',
+      icon: Icons.show_chart_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGrid([
+            ResultCard(
+              title: 'Minimum Operating Speed',
+              value:
+                  '${envelope.minimumOperatingSpeedMs.toStringAsFixed(1)} m/s',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Stall Speed',
+              value: '${envelope.stallSpeedMs.toStringAsFixed(1)} m/s',
+            ),
+            ResultCard(
+              title: 'Maneuvering Speed — VA',
+              value: '${envelope.maneuveringSpeedMs.toStringAsFixed(1)} m/s',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Cruise Speed',
+              value: '${envelope.cruiseSpeedMs.toStringAsFixed(1)} m/s',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Maximum Operating Speed',
+              value:
+                  '${envelope.maximumOperatingSpeedMs.toStringAsFixed(1)} m/s',
+              color: statusColor,
+            ),
+            ResultCard(
+              title: 'Positive Limit Load',
+              value:
+                  '+${envelope.positiveLimitLoadFactor.toStringAsFixed(1)} g',
+            ),
+            ResultCard(
+              title: 'Negative Limit Load',
+              value: '${envelope.negativeLimitLoadFactor.toStringAsFixed(1)} g',
+            ),
+            ResultCard(
+              title: 'Maximum Dynamic Pressure',
+              value:
+                  '${envelope.maximumDynamicPressurePa.toStringAsFixed(0)} Pa',
+            ),
+            ResultCard(
+              title: 'Cruise Envelope Check',
+              value: envelope.isCruiseInsideEnvelope
+                  ? 'Zarf İçinde'
+                  : 'Zarf Dışında',
+              color: envelope.isCruiseInsideEnvelope
+                  ? Colors.green
+                  : Colors.red,
+            ),
+            ResultCard(
+              title: 'Envelope Status',
+              value: envelope.status,
+              color: statusColor,
+            ),
+          ]),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: statusColor.withValues(alpha: 0.28)),
+            ),
+            child: Text(
+              envelope.message,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.45,
+                color: statusColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _flightEnvelopeStatusColor(String status) {
+    switch (status) {
+      case 'Zarf İçinde':
+        return Colors.green;
+      case 'Zarf İçinde — Manevra Kısıtlı':
+      case 'Zarf İçinde — Hız Limiti Yakın':
+        return Colors.orange;
+      case 'Stall Marjı Yetersiz':
+      case 'Maksimum Hız Aşımı':
+        return Colors.red;
+      default:
+        return const Color(0xFF627D98);
+    }
+  }
+
   Widget _buildMissionPowerSection() {
     final powerCards = <Widget>[
       ResultCard(
@@ -1199,7 +1785,7 @@ class AnalysisResultPage extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 18,
           mainAxisSpacing: 18,
-          childAspectRatio: crossAxisCount == 3 ? 2.4 : 3.2,
+          childAspectRatio: crossAxisCount == 3 ? 2.15 : 3.0,
           children: children,
         );
       },

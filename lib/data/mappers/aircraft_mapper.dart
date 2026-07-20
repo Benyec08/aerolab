@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import '../../features/analysis/models/aircraft.dart';
+import '../../features/analysis/models/aircraft_mass_station.dart';
 import '../entities/aircraft_entity.dart';
 
 class AircraftMapper {
@@ -34,6 +37,15 @@ class AircraftMapper {
       motorEfficiency: entity.motorEfficiency,
       continuousMotorPowerW: entity.continuousMotorPowerW,
       maximumMotorPowerW: entity.maximumMotorPowerW,
+      massStations: _decodeMassStations(entity.massStationsJson),
+      meanAerodynamicChordM: entity.meanAerodynamicChordM,
+      macLeadingEdgeFromDatumM: entity.macLeadingEdgeFromDatumM,
+      neutralPointPercentMac: entity.neutralPointPercentMac,
+      minimumCgPercentMac: entity.minimumCgPercentMac,
+      maximumCgPercentMac: entity.maximumCgPercentMac,
+      maximumOperatingSpeedMs: entity.maximumOperatingSpeedMs,
+      positiveLimitLoadFactor: entity.positiveLimitLoadFactor,
+      negativeLimitLoadFactor: entity.negativeLimitLoadFactor,
     );
   }
 
@@ -76,6 +88,40 @@ class AircraftMapper {
       batteryComponentId: model.batteryComponentId,
       escComponentId: model.escComponentId,
       motorPropellerCombinationId: model.motorPropellerCombinationId,
+      massStationsJson: jsonEncode(
+        model.massStations.map((station) => station.toMap()).toList(),
+      ),
+      meanAerodynamicChordM: model.meanAerodynamicChordM,
+      macLeadingEdgeFromDatumM: model.macLeadingEdgeFromDatumM,
+      neutralPointPercentMac: model.neutralPointPercentMac,
+      minimumCgPercentMac: model.minimumCgPercentMac,
+      maximumCgPercentMac: model.maximumCgPercentMac,
+      maximumOperatingSpeedMs: model.maximumOperatingSpeedMs,
+      positiveLimitLoadFactor: model.positiveLimitLoadFactor,
+      negativeLimitLoadFactor: model.negativeLimitLoadFactor,
     );
+  }
+
+  static List<AircraftMassStation> _decodeMassStations(String json) {
+    try {
+      final decoded = jsonDecode(json);
+
+      if (decoded is! List) {
+        return const [];
+      }
+
+      return decoded
+          .whereType<Map>()
+          .map(
+            (item) =>
+                AircraftMassStation.fromMap(Map<String, dynamic>.from(item)),
+          )
+          .where((station) => station.isValid)
+          .toList(growable: false);
+    } on FormatException {
+      return const [];
+    } on TypeError {
+      return const [];
+    }
   }
 }

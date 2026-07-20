@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../analysis/services/battery_chemistry_service.dart';
@@ -48,6 +50,27 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
 
   // Pervane sistemi
   late final TextEditingController _propellerDiameterController;
+
+  // Sprint 15E — CG ve statik marj
+  late final TextEditingController _meanAerodynamicChordController;
+  late final TextEditingController _macLeadingEdgeController;
+  late final TextEditingController _neutralPointPercentController;
+  late final TextEditingController _minimumCgPercentController;
+  late final TextEditingController _maximumCgPercentController;
+
+  // Sprint 15F — Uçuş zarfı girdileri
+  late final TextEditingController _maximumOperatingSpeedController;
+  late final TextEditingController _positiveLimitLoadFactorController;
+  late final TextEditingController _negativeLimitLoadFactorController;
+
+  late final TextEditingController _motorMassController;
+  late final TextEditingController _motorArmController;
+  late final TextEditingController _batteryMassController;
+  late final TextEditingController _batteryArmController;
+  late final TextEditingController _airframeMassController;
+  late final TextEditingController _airframeArmController;
+  late final TextEditingController _payloadMassController;
+  late final TextEditingController _payloadArmController;
 
   late String _selectedType;
   late String _selectedBatteryType;
@@ -164,6 +187,75 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     _propellerDiameterController = TextEditingController(
       text: aircraft?['propellerDiameter']?.toString() ?? '',
     );
+
+    final storedMassStations = _decodeMassStations(
+      aircraft?['massStationsJson'],
+    );
+
+    Map<String, dynamic>? findStation(String name) {
+      for (final station in storedMassStations) {
+        if (station['name']?.toString() == name) {
+          return station;
+        }
+      }
+      return null;
+    }
+
+    final motorStation = findStation('Motor Sistemi');
+    final batteryStation = findStation('Batarya');
+    final airframeStation = findStation('Gövde');
+    final payloadStation = findStation('Faydalı Yük');
+
+    _meanAerodynamicChordController = TextEditingController(
+      text: aircraft?['meanAerodynamicChordM']?.toString() ?? '0.30',
+    );
+    _macLeadingEdgeController = TextEditingController(
+      text: aircraft?['macLeadingEdgeFromDatumM']?.toString() ?? '0.40',
+    );
+    _neutralPointPercentController = TextEditingController(
+      text: aircraft?['neutralPointPercentMac']?.toString() ?? '40',
+    );
+    _minimumCgPercentController = TextEditingController(
+      text: aircraft?['minimumCgPercentMac']?.toString() ?? '20',
+    );
+    _maximumCgPercentController = TextEditingController(
+      text: aircraft?['maximumCgPercentMac']?.toString() ?? '35',
+    );
+
+    _maximumOperatingSpeedController = TextEditingController(
+      text: aircraft?['maximumOperatingSpeedMs']?.toString() ?? '25',
+    );
+    _positiveLimitLoadFactorController = TextEditingController(
+      text: aircraft?['positiveLimitLoadFactor']?.toString() ?? '3.8',
+    );
+    _negativeLimitLoadFactorController = TextEditingController(
+      text: aircraft?['negativeLimitLoadFactor']?.toString() ?? '-1.5',
+    );
+
+    _motorMassController = TextEditingController(
+      text: motorStation?['massKg']?.toString() ?? '0.60',
+    );
+    _motorArmController = TextEditingController(
+      text: motorStation?['armFromDatumM']?.toString() ?? '0.30',
+    );
+    _batteryMassController = TextEditingController(
+      text: batteryStation?['massKg']?.toString() ?? '0.70',
+    );
+    _batteryArmController = TextEditingController(
+      text: batteryStation?['armFromDatumM']?.toString() ?? '0.48',
+    );
+    _airframeMassController = TextEditingController(
+      text: airframeStation?['massKg']?.toString() ?? '0.90',
+    );
+    _airframeArmController = TextEditingController(
+      text: airframeStation?['armFromDatumM']?.toString() ?? '0.50',
+    );
+    _payloadMassController = TextEditingController(
+      text: payloadStation?['massKg']?.toString() ?? '0.20',
+    );
+    _payloadArmController = TextEditingController(
+      text: payloadStation?['armFromDatumM']?.toString() ?? '0.55',
+    );
   }
 
   @override
@@ -184,6 +276,22 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     _batteryCellController.dispose();
     _cellInternalResistanceController.dispose();
     _propellerDiameterController.dispose();
+    _meanAerodynamicChordController.dispose();
+    _macLeadingEdgeController.dispose();
+    _neutralPointPercentController.dispose();
+    _minimumCgPercentController.dispose();
+    _maximumCgPercentController.dispose();
+    _maximumOperatingSpeedController.dispose();
+    _positiveLimitLoadFactorController.dispose();
+    _negativeLimitLoadFactorController.dispose();
+    _motorMassController.dispose();
+    _motorArmController.dispose();
+    _batteryMassController.dispose();
+    _batteryArmController.dispose();
+    _airframeMassController.dispose();
+    _airframeArmController.dispose();
+    _payloadMassController.dispose();
+    _payloadArmController.dispose();
     super.dispose();
   }
 
@@ -366,6 +474,113 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     return _parseDouble(controller) / 100.0;
   }
 
+  List<Map<String, dynamic>> _decodeMassStations(dynamic value) {
+    try {
+      final decoded = value is String ? jsonDecode(value) : value;
+
+      if (decoded is! List) {
+        return const [];
+      }
+
+      return decoded
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList(growable: false);
+    } on FormatException {
+      return const [];
+    } on TypeError {
+      return const [];
+    }
+  }
+
+  List<Map<String, dynamic>> _buildMassStations() {
+    final stations = <Map<String, dynamic>>[];
+
+    void addStation({
+      required String name,
+      required TextEditingController massController,
+      required TextEditingController armController,
+    }) {
+      final massKg = _parseDouble(massController);
+
+      if (massKg <= 0.0) {
+        return;
+      }
+
+      stations.add({
+        'name': name,
+        'massKg': massKg,
+        'armFromDatumM': _parseDouble(armController),
+      });
+    }
+
+    addStation(
+      name: 'Motor Sistemi',
+      massController: _motorMassController,
+      armController: _motorArmController,
+    );
+    addStation(
+      name: 'Batarya',
+      massController: _batteryMassController,
+      armController: _batteryArmController,
+    );
+    addStation(
+      name: 'Gövde',
+      massController: _airframeMassController,
+      armController: _airframeArmController,
+    );
+    addStation(
+      name: 'Faydalı Yük',
+      massController: _payloadMassController,
+      armController: _payloadArmController,
+    );
+
+    return stations;
+  }
+
+  bool _validateStabilityInputs() {
+    if (_selectedType == 'Drone' || _selectedType == 'Helikopter') {
+      return true;
+    }
+
+    final minimumCg = _parseDouble(_minimumCgPercentController);
+    final maximumCg = _parseDouble(_maximumCgPercentController);
+
+    if (minimumCg >= maximumCg) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Minimum CG limiti, maksimum CG limitinden küçük olmalıdır.',
+          ),
+        ),
+      );
+      return false;
+    }
+
+    final stations = _buildMassStations();
+    final totalStationMass = stations.fold<double>(
+      0.0,
+      (sum, station) => sum + (station['massKg'] as double),
+    );
+    final aircraftMass = _parseDouble(_weightController);
+    final allowedDifference = aircraftMass * 0.02;
+
+    if ((totalStationMass - aircraftMass).abs() > allowedDifference) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Kütle istasyonları toplamı '
+            '${totalStationMass.toStringAsFixed(2)} kg, araç ağırlığı ise '
+            '${aircraftMass.toStringAsFixed(2)} kg. Fark en fazla %2 olmalıdır.',
+          ),
+        ),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   bool _containsMotorPropellerCombination(String? combinationId) {
     if (combinationId == null || combinationId.trim().isEmpty) {
       return false;
@@ -410,6 +625,10 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
       return;
     }
 
+    if (!_validateStabilityInputs()) {
+      return;
+    }
+
     final batteryCellCount = _parseInt(_batteryCellController);
     final batterySummary = _batteryController.text.trim().isEmpty
         ? '${batteryCellCount}S $_selectedBatteryType'
@@ -443,6 +662,19 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
       'motorPropellerCombinationId': selectedCombination?.id,
       'batteryComponentId': widget.aircraft?['batteryComponentId'],
       'escComponentId': widget.aircraft?['escComponentId'],
+      'massStationsJson': jsonEncode(_buildMassStations()),
+      'meanAerodynamicChordM': _parseDouble(_meanAerodynamicChordController),
+      'macLeadingEdgeFromDatumM': _parseDouble(_macLeadingEdgeController),
+      'neutralPointPercentMac': _parseDouble(_neutralPointPercentController),
+      'minimumCgPercentMac': _parseDouble(_minimumCgPercentController),
+      'maximumCgPercentMac': _parseDouble(_maximumCgPercentController),
+      'maximumOperatingSpeedMs': _parseDouble(_maximumOperatingSpeedController),
+      'positiveLimitLoadFactor': _parseDouble(
+        _positiveLimitLoadFactorController,
+      ),
+      'negativeLimitLoadFactor': _parseDouble(
+        _negativeLimitLoadFactorController,
+      ),
       'created': widget.aircraft?['created'] as DateTime? ?? DateTime.now(),
     };
 
@@ -483,6 +715,20 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
                       ),
                       const SizedBox(height: 16),
                       _buildPhysicalProperties(),
+                      const SizedBox(height: 26),
+                      _buildSectionTitle(
+                        icon: Icons.balance_outlined,
+                        title: 'Ağırlık Merkezi ve Statik Marj',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildStabilitySystem(),
+                      const SizedBox(height: 26),
+                      _buildSectionTitle(
+                        icon: Icons.show_chart_outlined,
+                        title: 'Uçuş Zarfı',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildFlightEnvelopeSystem(),
                       const SizedBox(height: 26),
                       _buildSectionTitle(
                         icon: Icons.dataset_outlined,
@@ -636,6 +882,258 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildStabilitySystem() {
+    Widget numberField({
+      required TextEditingController controller,
+      required String label,
+      required String hint,
+      required String suffix,
+      bool allowZero = false,
+    }) {
+      return TextFormField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        textInputAction: TextInputAction.next,
+        decoration: _inputDecoration(
+          label: label,
+          hint: hint,
+          icon: Icons.straighten_outlined,
+          suffixText: suffix,
+        ),
+        validator: (value) =>
+            _validatePositiveNumber(value, label, allowZero: allowZero),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Datum noktası araç burnunda kabul edilir. Tüm boylamsal '
+          'konumlar datumdan geriye doğru metre cinsindendir.',
+          style: TextStyle(color: Color(0xFF627D98)),
+        ),
+        const SizedBox(height: 16),
+        numberField(
+          controller: _meanAerodynamicChordController,
+          label: 'Ortalama Aerodinamik Kord',
+          hint: '0.30',
+          suffix: 'm',
+          allowZero: true,
+        ),
+        const SizedBox(height: 16),
+        numberField(
+          controller: _macLeadingEdgeController,
+          label: 'MAC Hücum Kenarı / Datum',
+          hint: '0.40',
+          suffix: 'm',
+          allowZero: true,
+        ),
+        const SizedBox(height: 16),
+        numberField(
+          controller: _neutralPointPercentController,
+          label: 'Nötr Nokta',
+          hint: '40',
+          suffix: '% MAC',
+        ),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: numberField(
+                controller: _minimumCgPercentController,
+                label: 'Minimum CG Limiti',
+                hint: '20',
+                suffix: '% MAC',
+                allowZero: true,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: numberField(
+                controller: _maximumCgPercentController,
+                label: 'Maksimum CG Limiti',
+                hint: '35',
+                suffix: '% MAC',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        _buildMassStationFields(
+          title: 'Motor Sistemi',
+          massController: _motorMassController,
+          armController: _motorArmController,
+        ),
+        const SizedBox(height: 18),
+        _buildMassStationFields(
+          title: 'Batarya',
+          massController: _batteryMassController,
+          armController: _batteryArmController,
+        ),
+        const SizedBox(height: 18),
+        _buildMassStationFields(
+          title: 'Gövde',
+          massController: _airframeMassController,
+          armController: _airframeArmController,
+        ),
+        const SizedBox(height: 18),
+        _buildMassStationFields(
+          title: 'Faydalı Yük',
+          massController: _payloadMassController,
+          armController: _payloadArmController,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMassStationFields({
+    required String title,
+    required TextEditingController massController,
+    required TextEditingController armController,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF243B53),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: massController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                textInputAction: TextInputAction.next,
+                decoration: _inputDecoration(
+                  label: '$title Kütlesi',
+                  hint: '0.50',
+                  icon: Icons.monitor_weight_outlined,
+                  suffixText: 'kg',
+                ),
+                validator: (value) => _validatePositiveNumber(
+                  value,
+                  '$title kütlesi',
+                  allowZero: true,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: TextFormField(
+                controller: armController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                textInputAction: TextInputAction.next,
+                decoration: _inputDecoration(
+                  label: '$title Konumu',
+                  hint: '0.40',
+                  icon: Icons.swap_horiz_outlined,
+                  suffixText: 'm',
+                ),
+                validator: (value) => _validatePositiveNumber(
+                  value,
+                  '$title konumu',
+                  allowZero: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFlightEnvelopeSystem() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _maximumOperatingSpeedController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.next,
+          decoration: _inputDecoration(
+            label: 'Maksimum İşletme Hızı',
+            hint: '25',
+            icon: Icons.speed_outlined,
+            suffixText: 'm/s',
+          ),
+          validator: (value) =>
+              _validatePositiveNumber(value, 'Maksimum işletme hızı'),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _positiveLimitLoadFactorController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                textInputAction: TextInputAction.next,
+                decoration: _inputDecoration(
+                  label: 'Pozitif Limit Yük Faktörü',
+                  hint: '3.8',
+                  icon: Icons.arrow_upward_outlined,
+                  suffixText: 'g',
+                ),
+                validator: (value) {
+                  final parsed = double.tryParse(
+                    value?.trim().replaceAll(',', '.') ?? '',
+                  );
+
+                  if (parsed == null || parsed <= 1.0) {
+                    return 'Pozitif yük faktörü 1.0 değerinden büyük olmalıdır';
+                  }
+
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: TextFormField(
+                controller: _negativeLimitLoadFactorController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: true,
+                ),
+                textInputAction: TextInputAction.next,
+                decoration: _inputDecoration(
+                  label: 'Negatif Limit Yük Faktörü',
+                  hint: '-1.5',
+                  icon: Icons.arrow_downward_outlined,
+                  suffixText: 'g',
+                ),
+                validator: (value) {
+                  final parsed = double.tryParse(
+                    value?.trim().replaceAll(',', '.') ?? '',
+                  );
+
+                  if (parsed == null || parsed >= 0.0) {
+                    return 'Negatif yük faktörü sıfırdan küçük olmalıdır';
+                  }
+
+                  return null;
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

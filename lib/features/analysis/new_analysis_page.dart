@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'analysis_result_page.dart';
 import 'models/aircraft.dart';
+import 'models/aircraft_mass_station.dart';
 import 'models/environment.dart';
 import 'services/air_density_service.dart';
 import 'services/analysis_service.dart';
@@ -42,6 +43,27 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
   late final TextEditingController _temperatureController;
   late final TextEditingController _humidityController;
   late final TextEditingController _windSpeedController;
+
+  // Sprint 15E — CG ve statik marj girdileri
+  late final TextEditingController _meanAerodynamicChordController;
+  late final TextEditingController _macLeadingEdgeController;
+  late final TextEditingController _neutralPointPercentController;
+  late final TextEditingController _minimumCgPercentController;
+  late final TextEditingController _maximumCgPercentController;
+
+  // Sprint 15F — Uçuş zarfı girdileri
+  late final TextEditingController _maximumOperatingSpeedController;
+  late final TextEditingController _positiveLimitLoadFactorController;
+  late final TextEditingController _negativeLimitLoadFactorController;
+
+  late final TextEditingController _motorMassController;
+  late final TextEditingController _motorArmController;
+  late final TextEditingController _batteryMassController;
+  late final TextEditingController _batteryArmController;
+  late final TextEditingController _airframeMassController;
+  late final TextEditingController _airframeArmController;
+  late final TextEditingController _payloadMassController;
+  late final TextEditingController _payloadArmController;
 
   String _batteryType = 'LiPo';
   String _selectedAircraftType = 'Drone';
@@ -118,6 +140,73 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     _humidityController = TextEditingController(text: '40');
     _windSpeedController = TextEditingController(text: '12');
 
+    final existingStations = aircraft?.massStations ?? const [];
+
+    AircraftMassStation? findStation(String name) {
+      for (final station in existingStations) {
+        if (station.name == name) {
+          return station;
+        }
+      }
+      return null;
+    }
+
+    final motorStation = findStation('Motor Sistemi');
+    final batteryStation = findStation('Batarya');
+    final airframeStation = findStation('Gövde');
+    final payloadStation = findStation('Faydalı Yük');
+
+    _meanAerodynamicChordController = TextEditingController(
+      text: aircraft?.meanAerodynamicChordM.toString() ?? '0.30',
+    );
+    _macLeadingEdgeController = TextEditingController(
+      text: aircraft?.macLeadingEdgeFromDatumM.toString() ?? '0.40',
+    );
+    _neutralPointPercentController = TextEditingController(
+      text: aircraft?.neutralPointPercentMac.toString() ?? '40',
+    );
+    _minimumCgPercentController = TextEditingController(
+      text: aircraft?.minimumCgPercentMac.toString() ?? '20',
+    );
+    _maximumCgPercentController = TextEditingController(
+      text: aircraft?.maximumCgPercentMac.toString() ?? '35',
+    );
+
+    _maximumOperatingSpeedController = TextEditingController(
+      text: aircraft?.maximumOperatingSpeedMs.toString() ?? '25',
+    );
+    _positiveLimitLoadFactorController = TextEditingController(
+      text: aircraft?.positiveLimitLoadFactor.toString() ?? '3.8',
+    );
+    _negativeLimitLoadFactorController = TextEditingController(
+      text: aircraft?.negativeLimitLoadFactor.toString() ?? '-1.5',
+    );
+
+    _motorMassController = TextEditingController(
+      text: motorStation?.massKg.toString() ?? '0.60',
+    );
+    _motorArmController = TextEditingController(
+      text: motorStation?.armFromDatumM.toString() ?? '0.30',
+    );
+    _batteryMassController = TextEditingController(
+      text: batteryStation?.massKg.toString() ?? '0.70',
+    );
+    _batteryArmController = TextEditingController(
+      text: batteryStation?.armFromDatumM.toString() ?? '0.48',
+    );
+    _airframeMassController = TextEditingController(
+      text: airframeStation?.massKg.toString() ?? '0.90',
+    );
+    _airframeArmController = TextEditingController(
+      text: airframeStation?.armFromDatumM.toString() ?? '0.50',
+    );
+    _payloadMassController = TextEditingController(
+      text: payloadStation?.massKg.toString() ?? '0.20',
+    );
+    _payloadArmController = TextEditingController(
+      text: payloadStation?.armFromDatumM.toString() ?? '0.55',
+    );
+
     final aircraftType = aircraft?.type;
     if (aircraftType == 'Drone' ||
         aircraftType == 'Sabit Kanat' ||
@@ -148,6 +237,23 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     _humidityController.dispose();
     _windSpeedController.dispose();
 
+    _meanAerodynamicChordController.dispose();
+    _macLeadingEdgeController.dispose();
+    _neutralPointPercentController.dispose();
+    _minimumCgPercentController.dispose();
+    _maximumCgPercentController.dispose();
+    _maximumOperatingSpeedController.dispose();
+    _positiveLimitLoadFactorController.dispose();
+    _negativeLimitLoadFactorController.dispose();
+    _motorMassController.dispose();
+    _motorArmController.dispose();
+    _batteryMassController.dispose();
+    _batteryArmController.dispose();
+    _airframeMassController.dispose();
+    _airframeArmController.dispose();
+    _payloadMassController.dispose();
+    _payloadArmController.dispose();
+
     super.dispose();
   }
 
@@ -157,6 +263,95 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
 
   double _toEfficiency(TextEditingController controller) {
     return _toDouble(controller) / 100.0;
+  }
+
+  List<AircraftMassStation> _buildMassStations() {
+    final stations = <AircraftMassStation>[];
+
+    void addStation({
+      required String name,
+      required TextEditingController massController,
+      required TextEditingController armController,
+    }) {
+      final massKg = _toDouble(massController);
+
+      if (massKg <= 0.0) {
+        return;
+      }
+
+      stations.add(
+        AircraftMassStation(
+          name: name,
+          massKg: massKg,
+          armFromDatumM: _toDouble(armController),
+        ),
+      );
+    }
+
+    addStation(
+      name: 'Motor Sistemi',
+      massController: _motorMassController,
+      armController: _motorArmController,
+    );
+    addStation(
+      name: 'Batarya',
+      massController: _batteryMassController,
+      armController: _batteryArmController,
+    );
+    addStation(
+      name: 'Gövde',
+      massController: _airframeMassController,
+      armController: _airframeArmController,
+    );
+    addStation(
+      name: 'Faydalı Yük',
+      massController: _payloadMassController,
+      armController: _payloadArmController,
+    );
+
+    return stations;
+  }
+
+  bool _validateStabilityInputs() {
+    if (_selectedAircraftType == 'Drone') {
+      return true;
+    }
+
+    final minimumCg = _toDouble(_minimumCgPercentController);
+    final maximumCg = _toDouble(_maximumCgPercentController);
+    final totalStationMass = _buildMassStations().fold<double>(
+      0.0,
+      (sum, station) => sum + station.massKg,
+    );
+    final aircraftMass = _toDouble(_weightController);
+    final massDifference = (totalStationMass - aircraftMass).abs();
+    final allowedDifference = aircraftMass * 0.02;
+
+    if (minimumCg >= maximumCg) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Minimum CG limiti, maksimum CG limitinden küçük olmalıdır.',
+          ),
+        ),
+      );
+      return false;
+    }
+
+    if (massDifference > allowedDifference) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Kütle istasyonları toplamı '
+            '${totalStationMass.toStringAsFixed(2)} kg, araç ağırlığı ise '
+            '${aircraftMass.toStringAsFixed(2)} kg. Fark en fazla %2 olmalıdır.',
+          ),
+        ),
+      );
+      return false;
+    }
+
+    return true;
   }
 
   double _defaultCellInternalResistanceMilliOhm(String batteryType) {
@@ -195,6 +390,10 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
 
   void _startAnalysis() {
     if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    if (!_validateStabilityInputs()) {
       return;
     }
 
@@ -243,6 +442,15 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
       escComponentId: widget.initialAircraft?.escComponentId,
       motorPropellerCombinationId:
           widget.initialAircraft?.motorPropellerCombinationId,
+      massStations: _buildMassStations(),
+      meanAerodynamicChordM: _toDouble(_meanAerodynamicChordController),
+      macLeadingEdgeFromDatumM: _toDouble(_macLeadingEdgeController),
+      neutralPointPercentMac: _toDouble(_neutralPointPercentController),
+      minimumCgPercentMac: _toDouble(_minimumCgPercentController),
+      maximumCgPercentMac: _toDouble(_maximumCgPercentController),
+      maximumOperatingSpeedMs: _toDouble(_maximumOperatingSpeedController),
+      positiveLimitLoadFactor: _toDouble(_positiveLimitLoadFactorController),
+      negativeLimitLoadFactor: _toDouble(_negativeLimitLoadFactorController),
     );
 
     final altitudeM = _toDouble(_altitudeController);
@@ -376,6 +584,160 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                               'Kanat Açıklığı (m)',
                               _wingSpanController,
                               allowZero: true,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      AnalysisSection(
+                        title: 'Ağırlık Merkezi ve Statik Marj',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Bu bölüm sabit kanat ve kanatlı VTOL araçlar '
+                              'için kullanılır. Datum noktası araç burnunda '
+                              've tüm konumlar datumdan geriye doğru metre '
+                              'cinsinden kabul edilir.',
+                            ),
+                            const SizedBox(height: 18),
+                            _buildTextField(
+                              'Ortalama Aerodinamik Kord — MAC (m)',
+                              _meanAerodynamicChordController,
+                              allowZero: true,
+                            ),
+                            _buildTextField(
+                              'MAC Hücum Kenarı / Datum (m)',
+                              _macLeadingEdgeController,
+                              allowZero: true,
+                            ),
+                            _buildTextField(
+                              'Nötr Nokta (% MAC)',
+                              _neutralPointPercentController,
+                              minimumValue: 0.1,
+                              maximumValue: 100,
+                            ),
+                            _buildTextField(
+                              'Minimum CG Limiti (% MAC)',
+                              _minimumCgPercentController,
+                              allowZero: true,
+                              minimumValue: 0,
+                              maximumValue: 100,
+                            ),
+                            _buildTextField(
+                              'Maksimum CG Limiti (% MAC)',
+                              _maximumCgPercentController,
+                              minimumValue: 0.1,
+                              maximumValue: 100,
+                            ),
+                            const Divider(height: 32),
+                            const Text(
+                              'Motor Sistemi',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              'Motor Sistemi Kütlesi (kg)',
+                              _motorMassController,
+                              allowZero: true,
+                            ),
+                            _buildTextField(
+                              'Motor Sistemi Konumu (m)',
+                              _motorArmController,
+                              allowZero: true,
+                            ),
+                            const Text(
+                              'Batarya',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              'Batarya Kütlesi (kg)',
+                              _batteryMassController,
+                              allowZero: true,
+                            ),
+                            _buildTextField(
+                              'Batarya Konumu (m)',
+                              _batteryArmController,
+                              allowZero: true,
+                            ),
+                            const Text(
+                              'Gövde',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              'Gövde Kütlesi (kg)',
+                              _airframeMassController,
+                              allowZero: true,
+                            ),
+                            _buildTextField(
+                              'Gövde Konumu (m)',
+                              _airframeArmController,
+                              allowZero: true,
+                            ),
+                            const Text(
+                              'Faydalı Yük',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              'Faydalı Yük Kütlesi (kg)',
+                              _payloadMassController,
+                              allowZero: true,
+                            ),
+                            _buildTextField(
+                              'Faydalı Yük Konumu (m)',
+                              _payloadArmController,
+                              allowZero: true,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      AnalysisSection(
+                        title: 'Uçuş Zarfı',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Bu girdiler sabit kanat ve kanatlı VTOL '
+                              'araçların stall, manevra ve maksimum hız '
+                              'sınırlarını belirlemek için kullanılır.',
+                            ),
+                            const SizedBox(height: 18),
+                            _buildTextField(
+                              'Maksimum İşletme Hızı (m/s)',
+                              _maximumOperatingSpeedController,
+                              minimumValue: 0.1,
+                            ),
+                            _buildTextField(
+                              'Pozitif Limit Yük Faktörü (g)',
+                              _positiveLimitLoadFactorController,
+                              minimumValue: 1.01,
+                            ),
+                            TextFormField(
+                              controller: _negativeLimitLoadFactorController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                    signed: true,
+                                  ),
+                              decoration: const InputDecoration(
+                                labelText: 'Negatif Limit Yük Faktörü (g)',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                final parsed = double.tryParse(
+                                  value?.trim().replaceAll(',', '.') ?? '',
+                                );
+
+                                if (parsed == null || parsed >= 0.0) {
+                                  return 'Negatif yük faktörü sıfırdan küçük olmalıdır';
+                                }
+
+                                return null;
+                              },
                             ),
                           ],
                         ),

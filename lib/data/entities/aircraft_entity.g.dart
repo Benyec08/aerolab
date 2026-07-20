@@ -61,13 +61,38 @@ class AircraftEntityAdapter extends TypeAdapter<AircraftEntity> {
       batteryComponentId: fields[27] as String?,
       escComponentId: fields[28] as String?,
       motorPropellerCombinationId: fields[29] as String?,
+      massStationsJson: fields[30] == null ? '[]' : fields[30] as String,
+      meanAerodynamicChordM: fields[31] == null
+          ? 0.0
+          : (fields[31] as num).toDouble(),
+      macLeadingEdgeFromDatumM: fields[32] == null
+          ? 0.0
+          : (fields[32] as num).toDouble(),
+      neutralPointPercentMac: fields[33] == null
+          ? 40.0
+          : (fields[33] as num).toDouble(),
+      minimumCgPercentMac: fields[34] == null
+          ? 20.0
+          : (fields[34] as num).toDouble(),
+      maximumCgPercentMac: fields[35] == null
+          ? 35.0
+          : (fields[35] as num).toDouble(),
+      maximumOperatingSpeedMs: fields[36] == null
+          ? 25.0
+          : (fields[36] as num).toDouble(),
+      positiveLimitLoadFactor: fields[37] == null
+          ? 3.8
+          : (fields[37] as num).toDouble(),
+      negativeLimitLoadFactor: fields[38] == null
+          ? -1.5
+          : (fields[38] as num).toDouble(),
     );
   }
 
   @override
   void write(BinaryWriter writer, AircraftEntity obj) {
     writer
-      ..writeByte(30)
+      ..writeByte(39)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -127,7 +152,25 @@ class AircraftEntityAdapter extends TypeAdapter<AircraftEntity> {
       ..writeByte(28)
       ..write(obj.escComponentId)
       ..writeByte(29)
-      ..write(obj.motorPropellerCombinationId);
+      ..write(obj.motorPropellerCombinationId)
+      ..writeByte(30)
+      ..write(obj.massStationsJson)
+      ..writeByte(31)
+      ..write(obj.meanAerodynamicChordM)
+      ..writeByte(32)
+      ..write(obj.macLeadingEdgeFromDatumM)
+      ..writeByte(33)
+      ..write(obj.neutralPointPercentMac)
+      ..writeByte(34)
+      ..write(obj.minimumCgPercentMac)
+      ..writeByte(35)
+      ..write(obj.maximumCgPercentMac)
+      ..writeByte(36)
+      ..write(obj.maximumOperatingSpeedMs)
+      ..writeByte(37)
+      ..write(obj.positiveLimitLoadFactor)
+      ..writeByte(38)
+      ..write(obj.negativeLimitLoadFactor);
   }
 
   @override

@@ -25,14 +25,12 @@ Sprint 5'te gerçek aerodinamik hesaplama eklenecektir.
 import 'dart:math';
 
 class StallService {
-
   double calculate({
     required double weightKg,
     required double wingAreaM2,
     required double airDensity,
     required double clMax,
   }) {
-
     //--------------------------------------------------------------
     // Kg -> Newton
     //--------------------------------------------------------------
@@ -46,8 +44,7 @@ class StallService {
     //--------------------------------------------------------------
 
     final stallSpeed = sqrt(
-      (2 * weightNewton) /
-      (airDensity * wingAreaM2 * clMax),
+      (2 * weightNewton) / (airDensity * wingAreaM2 * clMax),
     );
 
     return stallSpeed;

@@ -1,3 +1,9 @@
+import 'climb_performance_result.dart';
+import 'endurance_range_result.dart';
+import 'glide_performance_result.dart';
+import 'stability_result.dart';
+import 'flight_envelope_result.dart';
+
 class AnalysisResult {
   final String aircraftType;
   final bool hasFixedWingAerodynamics;
@@ -144,6 +150,27 @@ class AnalysisResult {
   final String componentCompatibilityMessage;
   final bool isComponentSelectionCompatible;
 
+  // Sprint 15B
+  // Fazla güç yöntemiyle hesaplanan tırmanma performansı.
+  final ClimbPerformanceResult climbPerformance;
+
+  // Sprint 15C
+  // Enerji ve yer hızı üzerinden hesaplanan endurance ve menzil sonucu.
+  final EnduranceRangeResult enduranceRange;
+
+  // Sprint 15D
+  // Parabolik sürükleme poları üzerinden hesaplanan süzülme performansı.
+  final GlidePerformanceResult glidePerformance;
+
+  // Sprint 15E
+  // Bileşen ağırlıkları ve boylamsal moment kollarından hesaplanan
+  // ağırlık merkezi ve statik marj sonucu.
+  final StabilityResult stability;
+
+  // Sprint 15F
+  // Stall, manevra ve maksimum işletme sınırlarını içeren uçuş zarfı.
+  final FlightEnvelopeResult flightEnvelope;
+
   final String wingLoadingStatus;
   final String powerToWeightStatus;
   final String thrustToWeightStatus;
@@ -272,6 +299,11 @@ class AnalysisResult {
     this.componentCompatibilityMessage =
         'Komponent veritabanı seçimi kullanılmadı.',
     this.isComponentSelectionCompatible = true,
+    this.climbPerformance = const ClimbPerformanceResult.notApplicable(),
+    this.enduranceRange = const EnduranceRangeResult.notApplicable(),
+    this.glidePerformance = const GlidePerformanceResult.notApplicable(),
+    this.stability = const StabilityResult.notApplicable(),
+    this.flightEnvelope = const FlightEnvelopeResult.notApplicable(),
     required this.wingLoadingStatus,
     required this.powerToWeightStatus,
     required this.thrustToWeightStatus,

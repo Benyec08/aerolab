@@ -752,3 +752,61 @@ All notable changes to this project will be documented in this file.
 - Power Reserve Section
 - Advanced Propulsion Analysis Section
 - Vehicle-Type-Specific Result Display
+
+# v0.15.0
+
+## Sprint 15 - Advanced Flight Performance & Stability Analysis
+
+### Added
+
+- Climb performance result model and engineering service
+- Available propulsive power calculation
+- Required level-flight power calculation
+- Excess power calculation
+- Rate of climb calculation in m/s and ft/min
+- Climb angle and time-to-altitude calculations
+- Endurance and range result model and engineering service
+- Usable battery energy based endurance calculation
+- Still-air and wind-adjusted range calculations
+- Ground speed calculation based on wind conditions
+- Glide performance result model and engineering service
+- Best glide ratio and best glide speed calculations
+- Sink rate, glide angle, glide distance and glide time calculations
+- Aircraft mass station model
+- Component-based center of gravity calculation
+- Mean aerodynamic chord based CG position calculation
+- Neutral point and static margin calculations
+- CG operating limit validation
+- Longitudinal static stability evaluation
+- Flight envelope result model and engineering service
+- Minimum operating speed calculation
+- Maneuvering speed calculation
+- Maximum operating speed validation
+- Positive and negative limit load factors
+- Maximum dynamic pressure calculation
+- Cruise flight envelope validation
+- Flight performance fields in new analysis and aircraft hangar forms
+- Hive persistence support for mass stations and flight envelope inputs
+- Climb Performance result section
+- Endurance & Range result section
+- Glide Performance result section
+- Center of Gravity & Stability result section
+- Flight Envelope result section
+- Unit tests for all Sprint 15 engineering services
+
+### Improved
+
+- Main analysis service now produces integrated advanced flight performance results
+- Analysis result model now carries climb, endurance, glide, stability and flight envelope results
+- Fixed-wing and winged VTOL applicability validation
+- Result card responsive layout and overflow handling
+- Engineering status colors and result explanations
+- Hangar editing and analysis input persistence
+- Windows desktop analysis workflow
+
+### Validation
+
+- Flutter analyzer completed with no issues
+- 90 automated tests passed
+- Windows release build completed successfully
+- Real fixed-wing UI tests completed for climb, endurance, glide, stability and flight envelope

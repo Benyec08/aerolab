@@ -23,6 +23,11 @@ Diğer servisleri çağırarak analiz sonucunu oluşturur.
 import '../models/aircraft.dart';
 import '../models/environment.dart';
 import '../models/analysis_result.dart';
+import '../models/climb_performance_result.dart';
+import '../models/endurance_range_result.dart';
+import '../models/glide_performance_result.dart';
+import '../models/stability_result.dart';
+import '../models/flight_envelope_result.dart';
 import '../../components/data/motor_propeller/motor_propeller_data_catalog.dart';
 import '../../components/models/motor_propeller_combination.dart';
 
@@ -43,6 +48,11 @@ import 'battery_score_service.dart';
 import 'battery_system_service.dart';
 import 'atmosphere_system_service.dart';
 import 'wind_system_service.dart';
+import 'climb_performance_service.dart';
+import 'endurance_range_service.dart';
+import 'glide_performance_service.dart';
+import 'stability_service.dart';
+import 'flight_envelope_service.dart';
 
 class AnalysisService {
   final _aspectRatioService = AspectRatioService();
@@ -62,6 +72,11 @@ class AnalysisService {
   final _batteryRecommendationService = BatteryRecommendationService();
   final _atmosphereSystemService = AtmosphereSystemService();
   final _windSystemService = const WindSystemService();
+  final _climbPerformanceService = const ClimbPerformanceService();
+  final _enduranceRangeService = const EnduranceRangeService();
+  final _glidePerformanceService = const GlidePerformanceService();
+  final _stabilityService = const StabilityService();
+  final _flightEnvelopeService = const FlightEnvelopeService();
 
   AnalysisResult analyze(Aircraft aircraft, Environment environment) {
     final bool hasFixedWingAerodynamics =
@@ -233,6 +248,90 @@ class AnalysisService {
       maximumMotorPowerW: aircraft.maximumMotorPowerW,
     );
 
+    final double availableClimbPropulsivePowerW =
+        aircraft.maximumMotorPowerW *
+        aircraft.escEfficiency *
+        aircraft.motorEfficiency *
+        MissionPowerService.defaultPropellerEfficiency;
+
+    final double requiredLevelFlightPowerW = hasFixedWingAerodynamics
+        ? drag * aerodynamicAirspeedMs
+        : 0.0;
+
+    final ClimbPerformanceResult climbPerformanceResult =
+        hasFixedWingAerodynamics
+        ? _climbPerformanceService.calculate(
+            massKg: aircraft.weightKg,
+            availablePropulsivePowerW: availableClimbPropulsivePowerW,
+            requiredLevelFlightPowerW: requiredLevelFlightPowerW,
+            flightSpeedMs: aerodynamicAirspeedMs,
+          )
+        : const ClimbPerformanceResult.notApplicable(
+            message:
+                'Tırmanma performansı yalnızca sabit kanat veya '
+                'kanatlı VTOL araçlar için hesaplanır.',
+          );
+
+    final GlidePerformanceResult glidePerformanceResult =
+        hasFixedWingAerodynamics
+        ? _glidePerformanceService.calculate(
+            massKg: aircraft.weightKg,
+            airDensityKgM3: airDensity,
+            wingAreaM2: aircraft.wingAreaM2,
+            aspectRatio: aspectRatio,
+            zeroLiftDragCoefficient: aircraft.zeroLiftDragCoefficient,
+            oswaldEfficiencyFactor: aircraft.oswaldEfficiencyFactor,
+          )
+        : const GlidePerformanceResult.notApplicable(
+            message:
+                'Süzülme performansı yalnızca sabit kanat veya '
+                'kanatlı VTOL araçlar için hesaplanır.',
+          );
+
+    final StabilityResult stabilityResult =
+        hasFixedWingAerodynamics && aircraft.hasStabilityInputs
+        ? _stabilityService.calculate(
+            massStations: aircraft.massStations
+                .map(
+                  (station) => MassStation(
+                    name: station.name,
+                    massKg: station.massKg,
+                    armFromDatumM: station.armFromDatumM,
+                  ),
+                )
+                .toList(growable: false),
+            meanAerodynamicChordM: aircraft.meanAerodynamicChordM,
+            macLeadingEdgeFromDatumM: aircraft.macLeadingEdgeFromDatumM,
+            neutralPointPercentMac: aircraft.neutralPointPercentMac,
+            minimumCgPercentMac: aircraft.minimumCgPercentMac,
+            maximumCgPercentMac: aircraft.maximumCgPercentMac,
+          )
+        : StabilityResult.notApplicable(
+            message: hasFixedWingAerodynamics
+                ? 'CG ve statik marj hesabı için kütle istasyonları, '
+                      'MAC ve nötr nokta girdileri tamamlanmalıdır.'
+                : 'CG ve statik marj analizi yalnızca sabit kanat veya '
+                      'kanatlı VTOL araçlar için hesaplanır.',
+          );
+
+    final FlightEnvelopeResult flightEnvelopeResult =
+        hasFixedWingAerodynamics && aircraft.hasFlightEnvelopeInputs
+        ? _flightEnvelopeService.calculate(
+            airDensityKgM3: airDensity,
+            stallSpeedMs: stallSpeed,
+            cruiseSpeedMs: cruiseSpeedMs,
+            maximumOperatingSpeedMs: aircraft.maximumOperatingSpeedMs,
+            positiveLimitLoadFactor: aircraft.positiveLimitLoadFactor,
+            negativeLimitLoadFactor: aircraft.negativeLimitLoadFactor,
+          )
+        : FlightEnvelopeResult.notApplicable(
+            message: hasFixedWingAerodynamics
+                ? 'Uçuş zarfı için maksimum işletme hızı ve limit '
+                      'yük faktörleri geçerli olmalıdır.'
+                : 'Uçuş zarfı yalnızca sabit kanat veya kanatlı VTOL '
+                      'araçlar için hesaplanır.',
+          );
+
     final batterySystemResult = _batterySystemService.calculate(
       batteryType: aircraft.batteryType,
       cellCount: aircraft.batteryCellCount,
@@ -244,6 +343,19 @@ class AnalysisService {
 
     final double estimatedFlightTime =
         batterySystemResult.estimatedFlightTimeMinutes;
+
+    final EnduranceRangeResult enduranceRangeResult = hasFixedWingAerodynamics
+        ? _enduranceRangeService.calculate(
+            usableEnergyWh: batterySystemResult.realUsableEnergyWh,
+            cruisePowerW: missionPowerResult.cruisePowerW,
+            cruiseSpeedMs: cruiseSpeedMs,
+            estimatedGroundSpeedMs: windSystemResult.estimatedGroundSpeedMs,
+          )
+        : const EnduranceRangeResult.notApplicable(
+            message:
+                'Menzil ve havada kalış analizi yalnızca sabit kanat '
+                'veya kanatlı VTOL araçlar için hesaplanır.',
+          );
 
     final batteryScoreResult = _batteryScoreService.calculate(
       batterySystemResult: batterySystemResult,
@@ -449,6 +561,11 @@ class AnalysisService {
       componentCompatibilityStatus: componentAnalysis.compatibilityStatus,
       componentCompatibilityMessage: componentAnalysis.compatibilityMessage,
       isComponentSelectionCompatible: componentAnalysis.isCompatible,
+      climbPerformance: climbPerformanceResult,
+      enduranceRange: enduranceRangeResult,
+      glidePerformance: glidePerformanceResult,
+      stability: stabilityResult,
+      flightEnvelope: flightEnvelopeResult,
       wingLoadingStatus: wingLoadingStatus,
       powerToWeightStatus: powerToWeightStatus,
       thrustToWeightStatus: thrustToWeightStatus,

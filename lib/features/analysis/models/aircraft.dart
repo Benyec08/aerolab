@@ -1,3 +1,5 @@
+import 'aircraft_mass_station.dart';
+
 class Aircraft {
   final String name;
   final String type;
@@ -63,6 +65,21 @@ class Aircraft {
   /// Motor sisteminin kısa süreli sağlayabildiği toplam maksimum güç.
   final double maximumMotorPowerW;
 
+  // Sprint 15E
+  //
+  // Boylamsal ağırlık merkezi ve statik marj analizi girdileri.
+  final List<AircraftMassStation> massStations;
+  final double meanAerodynamicChordM;
+  final double macLeadingEdgeFromDatumM;
+  final double neutralPointPercentMac;
+  final double minimumCgPercentMac;
+  final double maximumCgPercentMac;
+
+  // Sprint 15F — Uçuş zarfı girdileri
+  final double maximumOperatingSpeedMs;
+  final double positiveLimitLoadFactor;
+  final double negativeLimitLoadFactor;
+
   Aircraft({
     required this.name,
     required this.type,
@@ -90,11 +107,39 @@ class Aircraft {
     this.motorEfficiency = 0.85,
     double? continuousMotorPowerW,
     double? maximumMotorPowerW,
-  }) : cellInternalResistanceMilliOhm =
+    List<AircraftMassStation> massStations = const [],
+    this.meanAerodynamicChordM = 0.0,
+    this.macLeadingEdgeFromDatumM = 0.0,
+    this.neutralPointPercentMac = 40.0,
+    this.minimumCgPercentMac = 20.0,
+    this.maximumCgPercentMac = 35.0,
+    this.maximumOperatingSpeedMs = 25.0,
+    this.positiveLimitLoadFactor = 3.8,
+    this.negativeLimitLoadFactor = -1.5,
+  }) : massStations = List.unmodifiable(massStations),
+       cellInternalResistanceMilliOhm =
            cellInternalResistanceMilliOhm ??
            _defaultCellInternalResistanceMilliOhm(batteryType),
        continuousMotorPowerW = continuousMotorPowerW ?? motorPowerW,
        maximumMotorPowerW = maximumMotorPowerW ?? motorPowerW;
+
+  bool get hasFlightEnvelopeInputs =>
+      maximumOperatingSpeedMs.isFinite &&
+      positiveLimitLoadFactor.isFinite &&
+      negativeLimitLoadFactor.isFinite &&
+      maximumOperatingSpeedMs > 0.0 &&
+      positiveLimitLoadFactor > 1.0 &&
+      negativeLimitLoadFactor < 0.0;
+
+  bool get hasStabilityInputs =>
+      massStations.isNotEmpty &&
+      massStations.every((station) => station.isValid) &&
+      meanAerodynamicChordM > 0.0 &&
+      neutralPointPercentMac > 0.0 &&
+      minimumCgPercentMac < maximumCgPercentMac;
+
+  double get totalMassStationMassKg =>
+      massStations.fold<double>(0.0, (sum, station) => sum + station.massKg);
 
   /// Komponent veritabanından bir motor seçilip seçilmediğini gösterir.
   bool get hasSelectedMotorComponent => _hasComponentId(motorComponentId);

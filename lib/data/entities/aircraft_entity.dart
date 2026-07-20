@@ -122,6 +122,37 @@ class AircraftEntity {
   @HiveField(29)
   final String? motorPropellerCombinationId;
 
+  // Sprint 15E
+  //
+  // Kütle istasyonları JSON olarak saklanır; böylece ayrı Hive adapter
+  // gerektirmeden eski kayıtlarla geriye dönük uyumluluk korunur.
+  @HiveField(30, defaultValue: '[]')
+  final String massStationsJson;
+
+  @HiveField(31, defaultValue: 0.0)
+  final double meanAerodynamicChordM;
+
+  @HiveField(32, defaultValue: 0.0)
+  final double macLeadingEdgeFromDatumM;
+
+  @HiveField(33, defaultValue: 40.0)
+  final double neutralPointPercentMac;
+
+  @HiveField(34, defaultValue: 20.0)
+  final double minimumCgPercentMac;
+
+  @HiveField(35, defaultValue: 35.0)
+  final double maximumCgPercentMac;
+
+  @HiveField(36, defaultValue: 25.0)
+  final double maximumOperatingSpeedMs;
+
+  @HiveField(37, defaultValue: 3.8)
+  final double positiveLimitLoadFactor;
+
+  @HiveField(38, defaultValue: -1.5)
+  final double negativeLimitLoadFactor;
+
   AircraftEntity({
     required this.id,
     required this.name,
@@ -153,6 +184,15 @@ class AircraftEntity {
     this.batteryComponentId,
     this.escComponentId,
     this.motorPropellerCombinationId,
+    this.massStationsJson = '[]',
+    this.meanAerodynamicChordM = 0.0,
+    this.macLeadingEdgeFromDatumM = 0.0,
+    this.neutralPointPercentMac = 40.0,
+    this.minimumCgPercentMac = 20.0,
+    this.maximumCgPercentMac = 35.0,
+    this.maximumOperatingSpeedMs = 25.0,
+    this.positiveLimitLoadFactor = 3.8,
+    this.negativeLimitLoadFactor = -1.5,
   }) : continuousMotorPowerW =
            continuousMotorPowerW == null || continuousMotorPowerW <= 0
            ? motorPowerW
@@ -195,6 +235,15 @@ class AircraftEntity {
     String? batteryComponentId,
     String? escComponentId,
     String? motorPropellerCombinationId,
+    String massStationsJson = '[]',
+    double meanAerodynamicChordM = 0.0,
+    double macLeadingEdgeFromDatumM = 0.0,
+    double neutralPointPercentMac = 40.0,
+    double minimumCgPercentMac = 20.0,
+    double maximumCgPercentMac = 35.0,
+    double maximumOperatingSpeedMs = 25.0,
+    double positiveLimitLoadFactor = 3.8,
+    double negativeLimitLoadFactor = -1.5,
   }) {
     final now = DateTime.now();
 
@@ -229,6 +278,15 @@ class AircraftEntity {
       batteryComponentId: batteryComponentId,
       escComponentId: escComponentId,
       motorPropellerCombinationId: motorPropellerCombinationId,
+      massStationsJson: massStationsJson,
+      meanAerodynamicChordM: meanAerodynamicChordM,
+      macLeadingEdgeFromDatumM: macLeadingEdgeFromDatumM,
+      neutralPointPercentMac: neutralPointPercentMac,
+      minimumCgPercentMac: minimumCgPercentMac,
+      maximumCgPercentMac: maximumCgPercentMac,
+      maximumOperatingSpeedMs: maximumOperatingSpeedMs,
+      positiveLimitLoadFactor: positiveLimitLoadFactor,
+      negativeLimitLoadFactor: negativeLimitLoadFactor,
     );
   }
 
@@ -263,6 +321,15 @@ class AircraftEntity {
     String? batteryComponentId,
     String? escComponentId,
     String? motorPropellerCombinationId,
+    String? massStationsJson,
+    double? meanAerodynamicChordM,
+    double? macLeadingEdgeFromDatumM,
+    double? neutralPointPercentMac,
+    double? minimumCgPercentMac,
+    double? maximumCgPercentMac,
+    double? maximumOperatingSpeedMs,
+    double? positiveLimitLoadFactor,
+    double? negativeLimitLoadFactor,
   }) {
     final updatedMotorPowerW = motorPowerW ?? this.motorPowerW;
 
@@ -303,6 +370,21 @@ class AircraftEntity {
       escComponentId: escComponentId ?? this.escComponentId,
       motorPropellerCombinationId:
           motorPropellerCombinationId ?? this.motorPropellerCombinationId,
+      massStationsJson: massStationsJson ?? this.massStationsJson,
+      meanAerodynamicChordM:
+          meanAerodynamicChordM ?? this.meanAerodynamicChordM,
+      macLeadingEdgeFromDatumM:
+          macLeadingEdgeFromDatumM ?? this.macLeadingEdgeFromDatumM,
+      neutralPointPercentMac:
+          neutralPointPercentMac ?? this.neutralPointPercentMac,
+      minimumCgPercentMac: minimumCgPercentMac ?? this.minimumCgPercentMac,
+      maximumCgPercentMac: maximumCgPercentMac ?? this.maximumCgPercentMac,
+      maximumOperatingSpeedMs:
+          maximumOperatingSpeedMs ?? this.maximumOperatingSpeedMs,
+      positiveLimitLoadFactor:
+          positiveLimitLoadFactor ?? this.positiveLimitLoadFactor,
+      negativeLimitLoadFactor:
+          negativeLimitLoadFactor ?? this.negativeLimitLoadFactor,
     );
   }
 
@@ -358,6 +440,39 @@ class AircraftEntity {
       motorPropellerCombinationId: _toNullableString(
         map['motorPropellerCombinationId'],
       ),
+      massStationsJson: map['massStationsJson']?.toString() ?? '[]',
+      meanAerodynamicChordM: _toDouble(
+        map['meanAerodynamicChordM'],
+        fallback: 0.0,
+      ),
+      macLeadingEdgeFromDatumM: _toDouble(
+        map['macLeadingEdgeFromDatumM'],
+        fallback: 0.0,
+      ),
+      neutralPointPercentMac: _toDouble(
+        map['neutralPointPercentMac'],
+        fallback: 40.0,
+      ),
+      minimumCgPercentMac: _toDouble(
+        map['minimumCgPercentMac'],
+        fallback: 20.0,
+      ),
+      maximumCgPercentMac: _toDouble(
+        map['maximumCgPercentMac'],
+        fallback: 35.0,
+      ),
+      maximumOperatingSpeedMs: _toDouble(
+        map['maximumOperatingSpeedMs'],
+        fallback: 25.0,
+      ),
+      positiveLimitLoadFactor: _toDouble(
+        map['positiveLimitLoadFactor'],
+        fallback: 3.8,
+      ),
+      negativeLimitLoadFactor: _toDouble(
+        map['negativeLimitLoadFactor'],
+        fallback: -1.5,
+      ),
     );
   }
 
@@ -395,6 +510,15 @@ class AircraftEntity {
       'batteryComponentId': batteryComponentId,
       'escComponentId': escComponentId,
       'motorPropellerCombinationId': motorPropellerCombinationId,
+      'massStationsJson': massStationsJson,
+      'meanAerodynamicChordM': meanAerodynamicChordM,
+      'macLeadingEdgeFromDatumM': macLeadingEdgeFromDatumM,
+      'neutralPointPercentMac': neutralPointPercentMac,
+      'minimumCgPercentMac': minimumCgPercentMac,
+      'maximumCgPercentMac': maximumCgPercentMac,
+      'maximumOperatingSpeedMs': maximumOperatingSpeedMs,
+      'positiveLimitLoadFactor': positiveLimitLoadFactor,
+      'negativeLimitLoadFactor': negativeLimitLoadFactor,
     };
   }
 
