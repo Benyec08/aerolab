@@ -49,7 +49,7 @@ class AircraftRepository {
     final now = DateTime.now();
 
     final copiedAircraft = aircraft.copyWith(
-      id: now.microsecondsSinceEpoch.toString(),
+      id: AircraftEntity.generateUniqueId(),
       name: copyName,
       createdAt: now,
       updatedAt: now,

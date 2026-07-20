@@ -1742,15 +1742,20 @@ class AnalysisResultPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(Icons.tips_and_updates, color: Color(0xFF0B3D91)),
               SizedBox(width: 10),
-              Text(
-                'Engineering Recommendation',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF102A43),
+              Expanded(
+                child: Text(
+                  'Engineering Recommendation',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF102A43),
+                  ),
                 ),
               ),
             ],

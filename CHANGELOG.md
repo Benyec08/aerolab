@@ -810,3 +810,55 @@ All notable changes to this project will be documented in this file.
 - 90 automated tests passed
 - Windows release build completed successfully
 - Real fixed-wing UI tests completed for climb, endurance, glide, stability and flight envelope
+
+# v0.16.0
+
+## Sprint 16 - Validation, Reliability & Release Readiness
+
+### Added
+
+- Boundary tests for core aerodynamic services
+- Boundary tests for battery and energy services
+- Boundary tests for propulsion services
+- Boundary tests for advanced performance and stability services
+- Vehicle-type applicability tests for the main analysis service
+- Hangar persistence and data integrity tests
+- Responsive UI and user flow tests
+- Dashboard tests for 1280x800, 900x700 and 600x700 window sizes
+- New analysis page rendering and scrolling tests
+- Fixed-wing and drone result page responsive tests
+
+### Improved
+
+- Lift service input validation
+- Drag service input validation
+- Stall speed service input validation
+- Aircraft entity unique ID generation
+- Aircraft duplication ID safety
+- Dashboard responsive layout
+- Dashboard narrow-screen scrolling
+- Dashboard header and card layout behavior
+- Result section title overflow handling
+- Engineering recommendation title overflow handling
+- Fixed-wing and drone result display at narrow desktop sizes
+
+### Fixed
+
+- Duplicate aircraft ID collisions during rapid creation and duplication
+- Invalid aerodynamic service inputs producing unsafe calculations
+- Dashboard horizontal overflow at 600x700
+- Dashboard vertical overflow at reduced window heights
+- Result section horizontal overflow on narrow screens
+- Engineering recommendation header overflow on narrow screens
+
+### Validation
+
+- Flutter analyzer completed with no issues
+- 195 automated tests passed
+- 10 responsive UI and user flow tests passed
+- Windows release build completed successfully
+- Real release-mode drone analysis completed successfully
+- Real release-mode fixed-wing analysis completed successfully
+- Aircraft library create, edit, duplicate and delete flows verified
+- Aircraft persistence after application restart verified
+- Release UI checked without visible overflow

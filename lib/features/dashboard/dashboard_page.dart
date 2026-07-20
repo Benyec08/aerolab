@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../analysis/new_analysis_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -45,128 +46,131 @@ class _DashboardPageState extends State<DashboardPage>
   @override
   Widget build(BuildContext context) {
     final menuItems = [
-      _DashboardItem('Yeni Analiz', 'Uçuş analizi oluştur', Icons.add_chart),
-      _DashboardItem(
+      const _DashboardItem(
+        'Yeni Analiz',
+        'Uçuş analizi oluştur',
+        Icons.add_chart,
+      ),
+      const _DashboardItem(
         'Araç Kütüphanesi',
         'Araç profillerini kaydet',
         Icons.inventory_2,
       ),
-      _DashboardItem(
+      const _DashboardItem(
         'Analiz Geçmişi',
         'Eski analizleri görüntüle',
         Icons.history,
       ),
-      _DashboardItem(
+      const _DashboardItem(
         'Raporlar',
         'PDF ve teknik çıktılar',
         Icons.picture_as_pdf,
       ),
-      _DashboardItem('Ayarlar', 'Tema ve birimler', Icons.settings),
-      _DashboardItem('Hakkında', 'Proje bilgileri', Icons.info_outline),
+      const _DashboardItem('Ayarlar', 'Tema ve birimler', Icons.settings),
+      const _DashboardItem('Hakkında', 'Proje bilgileri', Icons.info_outline),
     ];
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _Header(),
-                      const SizedBox(height: 32),
-                      const _HeroPanel(),
-                      const SizedBox(height: 20),
-                      const _StatsRow(),
-                      const SizedBox(height: 24),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: GridView.builder(
-                                itemCount: menuItems.length,
-                                gridDelegate:
-                                    const SliverGridDelegateWithMaxCrossAxisExtent(
-                                      maxCrossAxisExtent: 300,
-                                      mainAxisSpacing: 18,
-                                      crossAxisSpacing: 18,
-                                      childAspectRatio: 1.45,
-                                    ),
-                                itemBuilder: (context, index) {
-                                  final item = menuItems[index];
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const _Header(),
+                          const SizedBox(height: 32),
+                          const _HeroPanel(),
+                          const SizedBox(height: 20),
+                          const _StatsRow(),
+                          const SizedBox(height: 24),
+                          GridView.builder(
+                            itemCount: menuItems.length,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 300,
+                                  mainAxisExtent: 190,
+                                  mainAxisSpacing: 18,
+                                  crossAxisSpacing: 18,
+                                ),
+                            itemBuilder: (context, index) {
+                              final item = menuItems[index];
 
-                                  return _DashboardCard(
-                                    item: item,
-                                    onTap: () {
-                                      switch (item.title) {
-                                        case 'Yeni Analiz':
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  const NewAnalysisPage(),
-                                            ),
-                                          );
-                                          break;
+                              return _DashboardCard(
+                                item: item,
+                                onTap: () {
+                                  switch (item.title) {
+                                    case 'Yeni Analiz':
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const NewAnalysisPage(),
+                                        ),
+                                      );
+                                      break;
 
-                                        case 'Araç Kütüphanesi':
-                                          Navigator.pushNamed(
-                                            context,
-                                            '/hangar',
-                                          );
-                                          break;
+                                    case 'Araç Kütüphanesi':
+                                      Navigator.pushNamed(context, '/hangar');
+                                      break;
 
-                                        default:
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                '${item.title} modülü yakında eklenecek.',
-                                              ),
-                                              duration: const Duration(
-                                                seconds: 2,
-                                              ),
-                                            ),
-                                          );
-                                      }
-                                    },
-                                  );
+                                    default:
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            '${item.title} modülü yakında eklenecek.',
+                                          ),
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                  }
                                 },
-                              ),
-                            ),
-                            const Divider(height: 30),
-                            const Text(
+                              );
+                            },
+                          ),
+                          const Divider(height: 30),
+                          const Center(
+                            child: Text(
                               'AeroLab v0.7 Alpha • Engineering Analysis Platform',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Color(0xFF627D98),
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            const Text(
+                          ),
+                          const SizedBox(height: 6),
+                          const Center(
+                            child: Text(
                               '© 2026 Yunus Emre Ceylan',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF9FB3C8),
                               ),
                             ),
-                            const SizedBox(height: 10),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -178,23 +182,13 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: const Color(0xFF0B3D91),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Icon(
-            Icons.flight_takeoff,
-            color: Colors.white,
-            size: 30,
-          ),
-        ),
-        const SizedBox(width: 16),
-        const Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 620;
+
+        const logo = _DashboardLogo();
+
+        const title = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -205,13 +199,48 @@ class _Header extends StatelessWidget {
                 color: Color(0xFF102A43),
               ),
             ),
+            SizedBox(height: 2),
             Text(
               'Aircraft Performance Analysis Platform',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 14, color: Color(0xFF627D98)),
             ),
           ],
-        ),
-      ],
+        );
+
+        if (isNarrow) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [logo, SizedBox(height: 14), title],
+          );
+        }
+
+        return const Row(
+          children: [
+            logo,
+            SizedBox(width: 16),
+            Expanded(child: title),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DashboardLogo extends StatelessWidget {
+  const _DashboardLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B3D91),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Icon(Icons.flight_takeoff, color: Colors.white, size: 30),
     );
   }
 }
@@ -221,43 +250,56 @@ class _HeroPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B3D91),
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.analytics, color: Colors.white, size: 46),
-          SizedBox(width: 22),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Engineering Analysis Dashboard',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Drone ve sabit kanat hava araçları için performans, risk ve uçuş güvenliği analizleri.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 15,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 620;
+
+        const icon = Icon(Icons.analytics, color: Colors.white, size: 46);
+
+        const content = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Engineering Analysis Dashboard',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
             ),
+            SizedBox(height: 8),
+            Text(
+              'Drone ve sabit kanat hava araçları için performans, risk ve uçuş güvenliği analizleri.',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 15,
+                height: 1.4,
+              ),
+            ),
+          ],
+        );
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(isNarrow ? 22 : 28),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0B3D91),
+            borderRadius: BorderRadius.circular(28),
           ),
-        ],
-      ),
+          child: isNarrow
+              ? const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [icon, SizedBox(height: 18), content],
+                )
+              : const Row(
+                  children: [
+                    icon,
+                    SizedBox(width: 22),
+                    Expanded(child: content),
+                  ],
+                ),
+        );
+      },
     );
   }
 }
@@ -267,20 +309,38 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(
-          child: _StatCard(title: 'Analiz Sayısı', value: '0'),
-        ),
-        SizedBox(width: 16),
-        Expanded(
-          child: _StatCard(title: 'Kayıtlı Araç', value: '0'),
-        ),
-        SizedBox(width: 16),
-        Expanded(
-          child: _StatCard(title: 'Risk Raporu', value: '0'),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 16.0;
+
+        final columnCount = constraints.maxWidth >= 850
+            ? 3
+            : constraints.maxWidth >= 520
+            ? 2
+            : 1;
+
+        final cardWidth =
+            (constraints.maxWidth - spacing * (columnCount - 1)) / columnCount;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            SizedBox(
+              width: cardWidth,
+              child: const _StatCard(title: 'Analiz Sayısı', value: '0'),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: const _StatCard(title: 'Kayıtlı Araç', value: '0'),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: const _StatCard(title: 'Risk Raporu', value: '0'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -314,6 +374,8 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 13, color: Color(0xFF627D98)),
           ),
         ],
@@ -372,6 +434,8 @@ class _DashboardCardState extends State<_DashboardCard> {
                   const Spacer(),
                   Text(
                     widget.item.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 19,
                       fontWeight: FontWeight.bold,
@@ -381,6 +445,8 @@ class _DashboardCardState extends State<_DashboardCard> {
                   const SizedBox(height: 6),
                   Text(
                     widget.item.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFF627D98),

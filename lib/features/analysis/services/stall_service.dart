@@ -1,27 +1,3 @@
-/*
-====================================================================
-
-Project
-AeroLab
-
-Module
-Aerodynamics Engine
-
-File
-stall_service.dart
-
-Description
-
-Bu servis hava aracının Stall Speed (Kalkış / Düşüş Stall Hızı)
-hesabını yapar.
-
-Bu sürümde sadeleştirilmiş formül kullanılmaktadır.
-
-Sprint 5'te gerçek aerodinamik hesaplama eklenecektir.
-
-====================================================================
-*/
-
 import 'dart:math';
 
 class StallService {
@@ -31,22 +7,23 @@ class StallService {
     required double airDensity,
     required double clMax,
   }) {
-    //--------------------------------------------------------------
-    // Kg -> Newton
-    //--------------------------------------------------------------
+    _validatePositiveFinite(weightKg, 'weightKg');
+    _validatePositiveFinite(wingAreaM2, 'wingAreaM2');
+    _validatePositiveFinite(airDensity, 'airDensity');
+    _validatePositiveFinite(clMax, 'clMax');
 
     final weightNewton = weightKg * 9.81;
 
-    //--------------------------------------------------------------
-    // Stall Speed
-    //
-    // Vs = √((2W)/(ρSCLmax))
-    //--------------------------------------------------------------
+    return sqrt((2.0 * weightNewton) / (airDensity * wingAreaM2 * clMax));
+  }
 
-    final stallSpeed = sqrt(
-      (2 * weightNewton) / (airDensity * wingAreaM2 * clMax),
-    );
-
-    return stallSpeed;
+  void _validatePositiveFinite(double value, String name) {
+    if (!value.isFinite || value <= 0.0) {
+      throw ArgumentError.value(
+        value,
+        name,
+        'Değer sıfırdan büyük ve sonlu olmalıdır.',
+      );
+    }
   }
 }

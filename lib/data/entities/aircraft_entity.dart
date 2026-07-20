@@ -4,6 +4,20 @@ part 'aircraft_entity.g.dart';
 
 @HiveType(typeId: 0)
 class AircraftEntity {
+  static int _lastGeneratedIdMicroseconds = 0;
+
+  static String generateUniqueId() {
+    final currentMicroseconds = DateTime.now().microsecondsSinceEpoch;
+
+    if (currentMicroseconds <= _lastGeneratedIdMicroseconds) {
+      _lastGeneratedIdMicroseconds++;
+    } else {
+      _lastGeneratedIdMicroseconds = currentMicroseconds;
+    }
+
+    return _lastGeneratedIdMicroseconds.toString();
+  }
+
   @HiveField(0)
   final String id;
 
@@ -52,11 +66,6 @@ class AircraftEntity {
   @HiveField(15)
   final DateTime updatedAt;
 
-  // Sprint 10B
-  // Sabit kanat ve kanatlı VTOL araçları için aerodinamik girdiler.
-  //
-  // Varsayılan değerler, Sprint 10B öncesinde kaydedilmiş Hive
-  // kayıtlarının güvenli biçimde okunabilmesini sağlar.
   @HiveField(16, defaultValue: 15.0)
   final double cruiseSpeedMs;
 
@@ -69,44 +78,21 @@ class AircraftEntity {
   @HiveField(19, defaultValue: 0.80)
   final double oswaldEfficiencyFactor;
 
-  // Sprint 11A
-  //
-  // Verim değerleri yüzde yerine 0–1 aralığında saklanır.
   @HiveField(20, defaultValue: 0.95)
   final double escEfficiency;
 
   @HiveField(21, defaultValue: 0.85)
   final double motorEfficiency;
 
-  /// Motor sisteminin güvenli biçimde sağlayabildiği toplam sürekli güç.
-  ///
-  /// Eski Hive kayıtlarında bu alan bulunmadığı için 0.0 okunabilir.
-  /// Constructor içindeki fallback sayesinde motorPowerW kullanılır.
   @HiveField(22, defaultValue: 0.0)
   final double continuousMotorPowerW;
 
-  /// Motor sisteminin kısa süreli sağlayabildiği toplam maksimum güç.
-  ///
-  /// Eski Hive kayıtlarında bu alan bulunmadığı için 0.0 okunabilir.
-  /// Constructor içindeki fallback sayesinde motorPowerW kullanılır.
   @HiveField(23, defaultValue: 0.0)
   final double maximumMotorPowerW;
 
-  // Sprint 12A
-  //
-  // Hücre başına iç direnç mΩ cinsindedir.
-  //
-  // 0.0 değeri, kayıt içinde özel bir değer bulunmadığını belirtir.
-  // Bu durumda BatteryChemistryService kimyaya bağlı varsayılanı kullanır.
   @HiveField(24, defaultValue: 0.0)
   final double cellInternalResistanceMilliOhm;
 
-  // Sprint 14D
-  //
-  // Komponent veritabanından seçilen kayıtların kimlikleri.
-  //
-  // Nullable alanlar sayesinde eski Hive kayıtları ve manuel giriş akışı
-  // geriye dönük olarak korunur.
   @HiveField(25)
   final String? motorComponentId;
 
@@ -122,10 +108,6 @@ class AircraftEntity {
   @HiveField(29)
   final String? motorPropellerCombinationId;
 
-  // Sprint 15E
-  //
-  // Kütle istasyonları JSON olarak saklanır; böylece ayrı Hive adapter
-  // gerektirmeden eski kayıtlarla geriye dönük uyumluluk korunur.
   @HiveField(30, defaultValue: '[]')
   final String massStationsJson;
 
@@ -248,7 +230,7 @@ class AircraftEntity {
     final now = DateTime.now();
 
     return AircraftEntity(
-      id: now.microsecondsSinceEpoch.toString(),
+      id: generateUniqueId(),
       name: name,
       type: type,
       weightKg: weightKg,
@@ -393,7 +375,7 @@ class AircraftEntity {
     final motorPowerW = _toDouble(map['motorPower']);
 
     return AircraftEntity(
-      id: map['id']?.toString() ?? now.microsecondsSinceEpoch.toString(),
+      id: map['id']?.toString() ?? generateUniqueId(),
       name: map['name']?.toString() ?? '',
       type: map['type']?.toString() ?? 'Sabit Kanat',
       weightKg: _toDouble(map['weight']),
