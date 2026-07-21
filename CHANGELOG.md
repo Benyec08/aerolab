@@ -916,4 +916,42 @@ All notable changes to this project will be documented in this file.
 - Deleted history records confirmed not to return after reopening
 - Real Windows analysis history flow verified
 - Dashboard analysis count refresh verified
-- Saved analysis result reopening verified
+- Saved analysis result reopening 
+
+# v0.17.1
+
+## Sprint 17B - Engineering Reports
+
+### Added
+
+- Reports page connected to the Dashboard
+- Report list generated from persistent analysis history
+- Newest-to-oldest report sorting
+- Detailed in-app engineering report page
+- Aircraft information report section
+- Environmental conditions report section
+- Aerodynamic performance report section
+- Power and propulsion report section
+- Energy and battery report section
+- Flight performance report section
+- Engineering scores and risk report section
+- Engineering recommendations section
+- Responsive report layouts for narrow and wide windows
+- Report user flow tests
+
+### Improved
+
+- Persistent analysis records can now be used as engineering reports
+- Non-finite engineering values are displayed as unavailable instead of causing UI errors
+- Report cards display aircraft type and analysis date
+- Empty and error states added to the Reports page
+
+### Validation
+
+- Flutter analyzer completed with no issues
+- 216 automated tests passed
+- Empty report state verified
+- Report ordering verified
+- Saved analysis report opening verified
+- Primary engineering report sections verified
+- Real Windows report user flow verified

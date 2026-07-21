@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/services/analysis_history_service.dart';
 import '../analysis/new_analysis_page.dart';
 import '../history/analysis_history_page.dart';
+import '../reports/reports_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -149,6 +150,10 @@ class _DashboardPageState extends State<DashboardPage>
 
                                     case 'Analiz Geçmişi':
                                       _openPage(const AnalysisHistoryPage());
+                                      break;
+
+                                    case 'Raporlar':
+                                      _openPage(const ReportsPage());
                                       break;
 
                                     default:
