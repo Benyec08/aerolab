@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'models/analysis_result.dart';
 import 'widgets/result_card.dart';
 import 'widgets/result_section.dart';
+import '../dashboard/dashboard_page.dart';
 
 class AnalysisResultPage extends StatelessWidget {
   final AnalysisResult result;
@@ -45,9 +46,40 @@ class AnalysisResultPage extends StatelessWidget {
                 _buildBatteryRecommendationSection(),
                 _buildPowerReserveSection(),
                 _buildRecommendationCard(),
+                const SizedBox(height: 32),
+                _buildHomeButton(context),
+                const SizedBox(height: 8),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomeButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        onPressed: () {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const DashboardPage()),
+            (route) => false,
+          );
+        },
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFF0B4AA2),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        icon: const Icon(Icons.home_outlined, color: Colors.white),
+        label: const Text(
+          'Ana Menüye Dön',
+          style: TextStyle(color: Colors.white),
         ),
       ),
     );

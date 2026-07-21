@@ -862,3 +862,58 @@ All notable changes to this project will be documented in this file.
 - Aircraft library create, edit, duplicate and delete flows verified
 - Aircraft persistence after application restart verified
 - Release UI checked without visible overflow
+
+# v0.17.0
+
+## Sprint 17A - Analysis History & Persistent Analysis Records
+
+### Added
+
+- Persistent analysis history storage with Hive CE
+- Analysis history entity and generated Hive adapter
+- Dedicated analysis history Hive box
+- Analysis history repository
+- Analysis history mapper
+- Analysis history service
+- Automatic history record creation after successful analysis
+- Versioned aircraft, environment and analysis result snapshots
+- Support for restoring complete saved analysis results
+- Analysis History page
+- Newest-to-oldest history sorting
+- Reopening saved analysis results
+- Single analysis record deletion
+- Clear all analysis history action
+- Real analysis count on Dashboard
+- Direct return to Dashboard from the analysis result page
+- Empty, error and populated states for the history page
+
+### Improved
+
+- New analysis flow now waits for persistent history storage before opening results
+- Dashboard refreshes analysis count from persistent history
+- Result page navigation returns directly to a refreshed Dashboard
+- Analysis snapshot serialization supports NaN and infinite engineering values
+- Widget tests can inject an isolated analysis history service
+- UI flow tests no longer depend on disk-based Hive operations
+
+### Fixed
+
+- Analysis count remaining stale after completing an analysis
+- Result page returning to Aircraft Library instead of Dashboard
+- Drone analysis history serialization failing on non-finite values
+- Dashboard crashing in widget tests when the analysis history box is not open
+- Analysis UI tests not waiting correctly for history persistence
+
+### Validation
+
+- Flutter analyzer completed with no issues
+- 212 automated tests passed
+- Repository operations verified
+- Complete Aircraft, Environment and AnalysisResult snapshot round trip verified
+- Analysis history service verified
+- Analysis history user flows verified
+- Persistence after closing and reopening the Hive box verified
+- Deleted history records confirmed not to return after reopening
+- Real Windows analysis history flow verified
+- Dashboard analysis count refresh verified
+- Saved analysis result reopening verified

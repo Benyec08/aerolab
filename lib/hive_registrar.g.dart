@@ -4,15 +4,18 @@
 
 import 'package:hive_ce/hive_ce.dart';
 import 'package:aerolab/data/entities/aircraft_entity.dart';
+import 'package:aerolab/data/entities/analysis_history_entity.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
     registerAdapter(AircraftEntityAdapter());
+    registerAdapter(AnalysisHistoryEntityAdapter());
   }
 }
 
 extension IsolatedHiveRegistrar on IsolatedHiveInterface {
   void registerAdapters() {
     registerAdapter(AircraftEntityAdapter());
+    registerAdapter(AnalysisHistoryEntityAdapter());
   }
 }

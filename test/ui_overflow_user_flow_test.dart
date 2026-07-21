@@ -1,6 +1,9 @@
 import 'package:aerolab/app.dart';
+import 'package:aerolab/data/entities/analysis_history_entity.dart';
+import 'package:aerolab/data/services/analysis_history_service.dart';
 import 'package:aerolab/features/analysis/analysis_result_page.dart';
 import 'package:aerolab/features/analysis/models/aircraft.dart';
+import 'package:aerolab/features/analysis/models/analysis_result.dart';
 import 'package:aerolab/features/analysis/models/aircraft_mass_station.dart';
 import 'package:aerolab/features/analysis/models/environment.dart';
 import 'package:aerolab/features/analysis/new_analysis_page.dart';
@@ -8,6 +11,25 @@ import 'package:aerolab/features/analysis/services/analysis_service.dart';
 import 'package:aerolab/features/dashboard/dashboard_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class _ImmediateAnalysisHistoryService extends AnalysisHistoryService {
+  @override
+  Future<AnalysisHistoryEntity> saveAnalysis({
+    required Aircraft aircraft,
+    required Environment environment,
+    required AnalysisResult result,
+  }) async {
+    return AnalysisHistoryEntity(
+      id: 'ui-test-history',
+      createdAt: DateTime(2026, 7, 21),
+      aircraftName: aircraft.name,
+      aircraftType: aircraft.type,
+      aircraftDataJson: '{}',
+      environmentDataJson: '{}',
+      resultDataJson: '{}',
+    );
+  }
+}
 
 void main() {
   Future<void> setTestWindow(WidgetTester tester, Size size) async {
@@ -199,7 +221,9 @@ void main() {
     testWidgets('renders and scrolls at normal desktop size', (tester) async {
       await pumpPage(
         tester,
-        page: const NewAnalysisPage(),
+        page: NewAnalysisPage(
+          historyService: _ImmediateAnalysisHistoryService(),
+        ),
         size: const Size(1000, 800),
       );
 
@@ -231,7 +255,9 @@ void main() {
     testWidgets('valid default Drone form opens result page', (tester) async {
       await pumpPage(
         tester,
-        page: const NewAnalysisPage(),
+        page: NewAnalysisPage(
+          historyService: _ImmediateAnalysisHistoryService(),
+        ),
         size: const Size(1000, 800),
       );
 

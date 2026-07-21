@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../data/services/analysis_history_service.dart';
 import '../analysis/new_analysis_page.dart';
+import '../history/analysis_history_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -14,6 +16,8 @@ class _DashboardPageState extends State<DashboardPage>
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
+  final AnalysisHistoryService _historyService = AnalysisHistoryService();
+  int _analysisCount = 0;
 
   @override
   void initState() {
@@ -35,6 +39,31 @@ class _DashboardPageState extends State<DashboardPage>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
+    _refreshAnalysisCount();
+  }
+
+  void _refreshAnalysisCount() {
+    if (!mounted) {
+      return;
+    }
+
+    try {
+      final analysisCount = _historyService.analysisCount;
+
+      setState(() {
+        _analysisCount = analysisCount;
+      });
+    } on StateError {
+      setState(() {
+        _analysisCount = 0;
+      });
+    }
+  }
+
+  Future<void> _openPage(Widget page) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+
+    _refreshAnalysisCount();
   }
 
   @override
@@ -90,7 +119,7 @@ class _DashboardPageState extends State<DashboardPage>
                           const SizedBox(height: 32),
                           const _HeroPanel(),
                           const SizedBox(height: 20),
-                          const _StatsRow(),
+                          _StatsRow(analysisCount: _analysisCount),
                           const SizedBox(height: 24),
                           GridView.builder(
                             itemCount: menuItems.length,
@@ -111,17 +140,15 @@ class _DashboardPageState extends State<DashboardPage>
                                 onTap: () {
                                   switch (item.title) {
                                     case 'Yeni Analiz':
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const NewAnalysisPage(),
-                                        ),
-                                      );
+                                      _openPage(const NewAnalysisPage());
                                       break;
 
                                     case 'Araç Kütüphanesi':
                                       Navigator.pushNamed(context, '/hangar');
+                                      break;
+
+                                    case 'Analiz Geçmişi':
+                                      _openPage(const AnalysisHistoryPage());
                                       break;
 
                                     default:
@@ -305,7 +332,9 @@ class _HeroPanel extends StatelessWidget {
 }
 
 class _StatsRow extends StatelessWidget {
-  const _StatsRow();
+  final int analysisCount;
+
+  const _StatsRow({required this.analysisCount});
 
   @override
   Widget build(BuildContext context) {
@@ -328,7 +357,10 @@ class _StatsRow extends StatelessWidget {
           children: [
             SizedBox(
               width: cardWidth,
-              child: const _StatCard(title: 'Analiz Sayısı', value: '0'),
+              child: _StatCard(
+                title: 'Analiz Sayısı',
+                value: analysisCount.toString(),
+              ),
             ),
             SizedBox(
               width: cardWidth,

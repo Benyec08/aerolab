@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/services/analysis_history_service.dart';
 import 'analysis_result_page.dart';
 import 'models/aircraft.dart';
 import 'models/aircraft_mass_station.dart';
@@ -12,8 +13,9 @@ import 'widgets/analysis_section.dart';
 
 class NewAnalysisPage extends StatefulWidget {
   final Aircraft? initialAircraft;
+  final AnalysisHistoryService? historyService;
 
-  const NewAnalysisPage({super.key, this.initialAircraft});
+  const NewAnalysisPage({super.key, this.initialAircraft, this.historyService});
 
   @override
   State<NewAnalysisPage> createState() => _NewAnalysisPageState();
@@ -68,6 +70,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
   String _batteryType = 'LiPo';
   String _selectedAircraftType = 'Drone';
   String _windDirection = 'Karşıdan';
+  bool _isSavingAnalysis = false;
 
   @override
   void initState() {
@@ -388,7 +391,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     return null;
   }
 
-  void _startAnalysis() {
+  Future<void> _startAnalysis() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
@@ -471,12 +474,51 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
       windDirection: _windDirection,
     );
 
-    final result = AnalysisService().analyze(aircraft, environment);
+    setState(() {
+      _isSavingAnalysis = true;
+    });
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => AnalysisResultPage(result: result)),
-    );
+    try {
+      final result = AnalysisService().analyze(aircraft, environment);
+
+      final historyService = widget.historyService ?? AnalysisHistoryService();
+
+      await historyService.saveAnalysis(
+        aircraft: aircraft,
+        environment: environment,
+        result: result,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final returnToDashboard = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => AnalysisResultPage(result: result)),
+      );
+
+      if (returnToDashboard == true && mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Analiz kaydedilemedi: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Analiz kaydedilemedi: $error')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSavingAnalysis = false;
+        });
+      }
+    }
   }
 
   @override
@@ -938,7 +980,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                         width: double.infinity,
                         height: 56,
                         child: FilledButton.icon(
-                          onPressed: _startAnalysis,
+                          onPressed: _isSavingAnalysis ? null : _startAnalysis,
                           icon: const Icon(Icons.analytics),
                           label: const Text(
                             'Analizi Başlat',
