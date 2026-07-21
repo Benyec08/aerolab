@@ -73,18 +73,18 @@ class _AnalysisHistoryPageState extends State<AnalysisHistoryPage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Analizi sil'),
+          title: Text('Analizi sil'),
           content: Text(
             '${history.aircraftName} için kaydedilen analiz silinsin mi?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('İptal'),
+              child: Text('İptal'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Sil'),
+              child: Text('Sil'),
             ),
           ],
         );
@@ -127,18 +127,18 @@ class _AnalysisHistoryPageState extends State<AnalysisHistoryPage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Tüm geçmişi temizle'),
-          content: const Text(
+          title: Text('Tüm geçmişi temizle'),
+          content: Text(
             'Bütün analiz kayıtları kalıcı olarak silinecek. Devam edilsin mi?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('İptal'),
+              child: Text('İptal'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Tümünü Sil'),
+              child: Text('Tümünü Sil'),
             ),
           ],
         );
@@ -175,20 +175,20 @@ class _AnalysisHistoryPageState extends State<AnalysisHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Analiz Geçmişi'),
+        title: Text('Analiz Geçmişi'),
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
             tooltip: 'Yenile',
             onPressed: _loadHistory,
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh),
           ),
           IconButton(
             tooltip: 'Tüm geçmişi temizle',
             onPressed: _history.isEmpty ? null : _clearHistory,
-            icon: const Icon(Icons.delete_sweep_outlined),
+            icon: Icon(Icons.delete_sweep_outlined),
           ),
           const SizedBox(width: 8),
         ],
@@ -232,7 +232,7 @@ class _AnalysisHistoryPageState extends State<AnalysisHistoryPage> {
       children: [
         Text(
           '${_history.length} kayıtlı analiz',
-          style: const TextStyle(fontSize: 15, color: Color(0xFF627D98)),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15),
         ),
         const SizedBox(height: 16),
         Expanded(
@@ -272,7 +272,7 @@ class _HistoryCard extends StatelessWidget {
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Color(0xFFD9E2EC)),
+        side: BorderSide(color: Theme.of(context).dividerColor),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -285,12 +285,16 @@ class _HistoryCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8EEF9),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFF164E82)
+                      : const Color(0xFFE8EEF9),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.analytics_outlined,
-                  color: Color(0xFF0B3D91),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFFE3F2FD)
+                      : const Color(0xFF0B3D91),
                 ),
               ),
               const SizedBox(width: 16),
@@ -302,10 +306,9 @@ class _HistoryCard extends StatelessWidget {
                       history.aircraftName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF102A43),
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -330,9 +333,12 @@ class _HistoryCard extends StatelessWidget {
               IconButton(
                 tooltip: 'Analizi sil',
                 onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline),
+                icon: Icon(Icons.delete_outline),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF627D98)),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -359,11 +365,15 @@ class _HistoryMeta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF627D98)),
+        Icon(
+          icon,
+          size: 16,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 5),
         Text(
           text,
-          style: const TextStyle(fontSize: 13, color: Color(0xFF627D98)),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 13),
         ),
       ],
     );
@@ -398,23 +408,25 @@ class _MessageState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 23,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF102A43),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 10),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, color: Color(0xFF627D98)),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontSize: 15),
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 20),
               FilledButton.icon(
                 onPressed: onAction,
-                icon: const Icon(Icons.refresh),
+                icon: Icon(Icons.refresh),
                 label: Text(actionLabel!),
               ),
             ],

@@ -76,15 +76,15 @@ class _ReportsPageState extends State<ReportsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Raporlar'),
+        title: Text('Raporlar'),
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
             tooltip: 'Yenile',
             onPressed: _loadReports,
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh),
           ),
           const SizedBox(width: 8),
         ],
@@ -128,7 +128,7 @@ class _ReportsPageState extends State<ReportsPage> {
       children: [
         Text(
           '${_history.length} kullanılabilir rapor',
-          style: const TextStyle(fontSize: 15, color: Color(0xFF627D98)),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15),
         ),
         const SizedBox(height: 16),
         Expanded(
@@ -142,7 +142,7 @@ class _ReportsPageState extends State<ReportsPage> {
                 elevation: 1,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: Color(0xFFD9E2EC)),
+                  side: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(20),
@@ -155,12 +155,18 @@ class _ReportsPageState extends State<ReportsPage> {
                           width: 52,
                           height: 52,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8EEF9),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFF164E82)
+                                : const Color(0xFFE8EEF9),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.description_outlined,
-                            color: Color(0xFF0B3D91),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFFE3F2FD)
+                                : const Color(0xFF0B3D91),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -172,11 +178,11 @@ class _ReportsPageState extends State<ReportsPage> {
                                 history.aircraftName,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF102A43),
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                               const SizedBox(height: 5),
                               Wrap(
@@ -197,9 +203,9 @@ class _ReportsPageState extends State<ReportsPage> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(
+                        Icon(
                           Icons.chevron_right,
-                          color: Color(0xFF627D98),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ],
                     ),
@@ -238,9 +244,9 @@ class EngineeringReportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Mühendislik Raporu'),
+        title: Text('Mühendislik Raporu'),
         backgroundColor: Colors.transparent,
       ),
       body: SafeArea(
@@ -454,7 +460,7 @@ class EngineeringReportPage extends StatelessWidget {
                     ],
                   ),
                   _buildScoreSection(),
-                  _buildRecommendationSection(),
+                  _buildRecommendationSection(context),
                   const SizedBox(height: 12),
                 ],
               ),
@@ -479,7 +485,7 @@ class EngineeringReportPage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'AeroLab Mühendislik Analiz Raporu',
                 style: TextStyle(
                   color: Colors.white,
@@ -490,13 +496,13 @@ class EngineeringReportPage extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 aircraft.name,
-                style: const TextStyle(color: Color(0xFFD9E8FF), fontSize: 17),
+                style: TextStyle(color: Color(0xFFD9E8FF), fontSize: 17),
               ),
             ],
           ),
           Text(
             _formatDate(history.createdAt),
-            style: const TextStyle(color: Color(0xFFD9E8FF), fontSize: 14),
+            style: TextStyle(color: Color(0xFFD9E8FF), fontSize: 14),
           ),
         ],
       ),
@@ -523,19 +529,21 @@ class EngineeringReportPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRecommendationSection() {
+  Widget _buildRecommendationSection(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 14),
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8EEF9),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1D3557)
+            : const Color(0xFFE8EEF9),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFC6D4EA)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.engineering_outlined, color: Color(0xFF0B3D91)),
               SizedBox(width: 10),
@@ -545,7 +553,7 @@ class EngineeringReportPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF102A43),
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -554,27 +562,27 @@ class EngineeringReportPage extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             result.recommendation,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               height: 1.5,
-              color: Color(0xFF243B53),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 14),
           Text(
             result.batteryRecommendationTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFF102A43),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 5),
           Text(
             result.batteryRecommendationMessage,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               height: 1.45,
-              color: Color(0xFF243B53),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],
@@ -631,9 +639,9 @@ class _ReportSection extends StatelessWidget {
       margin: const EdgeInsets.only(top: 14),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFD9E2EC)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,10 +653,10 @@ class _ReportSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF102A43),
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -690,24 +698,28 @@ class _ReportValueTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF263449)
+            : const Color(0xFFF7F9FC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE4EAF1)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             item.label,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF627D98)),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontSize: 13),
           ),
           const SizedBox(height: 5),
           Text(
             item.value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF102A43),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],
@@ -738,7 +750,7 @@ class _ReportMeta extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           text,
-          style: const TextStyle(fontSize: 13, color: Color(0xFF627D98)),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 13),
         ),
       ],
     );
@@ -773,23 +785,25 @@ class _ReportMessageState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 23,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF102A43),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 10),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, color: Color(0xFF627D98)),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontSize: 15),
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 20),
               FilledButton.icon(
                 onPressed: onAction,
-                icon: const Icon(Icons.refresh),
+                icon: Icon(Icons.refresh),
                 label: Text(actionLabel!),
               ),
             ],

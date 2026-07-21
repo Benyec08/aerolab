@@ -14,15 +14,21 @@ class ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = color ?? const Color(0xFF102A43);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accentColor =
+        color ?? (isDark ? const Color(0xFF90CAF9) : const Color(0xFF102A43));
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accentColor.withValues(alpha: 0.40)),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF526176)
+              : accentColor.withValues(alpha: 0.40),
+        ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x14000000),
@@ -38,11 +44,11 @@ class ResultCard extends StatelessWidget {
             title,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               height: 1.25,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF627D98),
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF627D98),
             ),
           ),
           const SizedBox(height: 12),

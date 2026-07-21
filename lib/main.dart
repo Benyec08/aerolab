@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import 'app.dart';
+import 'core/settings/theme_controller.dart';
 import 'data/entities/aircraft_entity.dart';
 import 'data/entities/analysis_history_entity.dart';
 import 'data/hive/hive_boxes.dart';
@@ -21,6 +22,9 @@ Future<void> main() async {
 
   await Hive.openBox<AircraftEntity>(HiveBoxes.aircraft);
   await Hive.openBox<AnalysisHistoryEntity>(HiveBoxes.analysisHistory);
+  await Hive.openBox<dynamic>(HiveBoxes.settings);
+
+  ThemeController.instance.initialize();
 
   runApp(const AeroLabApp());
 }

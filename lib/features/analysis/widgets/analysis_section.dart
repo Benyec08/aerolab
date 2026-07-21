@@ -50,10 +50,12 @@ class AnalysisSection extends StatelessWidget {
       children: [
         Text(
           title.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF0B3D91),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF90CAF9)
+                : const Color(0xFF0B3D91),
           ),
         ),
 
@@ -63,9 +65,15 @@ class AnalysisSection extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF243247)
+                : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFD9E2EC)),
+            border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF526176)
+                  : const Color(0xFFD9E2EC),
+            ),
           ),
           child: child,
         ),

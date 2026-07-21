@@ -526,7 +526,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     final openedFromHangar = widget.initialAircraft != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(openedFromHangar ? 'Araç Analizi' : 'Yeni Analiz'),
         backgroundColor: Colors.transparent,
@@ -538,7 +538,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
             padding: const EdgeInsets.all(24),
             child: Card(
               elevation: 0,
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
               ),
@@ -553,21 +553,20 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                         openedFromHangar
                             ? 'Kayıtlı Araç Analizi'
                             : 'Yeni Uçuş Analizi',
-                        style: const TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF102A43),
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         openedFromHangar
                             ? 'Araç Kütüphanesi verileri forma aktarıldı. Analiz koşullarını kontrol ederek analizi başlatın.'
                             : 'Hava aracı ve çevre bilgilerini girerek performans analizi oluştur.',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: Color(0xFF627D98),
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(fontSize: 15),
                       ),
                       const SizedBox(height: 28),
 
@@ -636,7 +635,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Bu bölüm sabit kanat ve kanatlı VTOL araçlar '
                               'için kullanılır. Datum noktası araç burnunda '
                               've tüm konumlar datumdan geriye doğru metre '
@@ -673,7 +672,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                               maximumValue: 100,
                             ),
                             const Divider(height: 32),
-                            const Text(
+                            Text(
                               'Motor Sistemi',
                               style: TextStyle(fontWeight: FontWeight.w700),
                             ),
@@ -688,7 +687,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                               _motorArmController,
                               allowZero: true,
                             ),
-                            const Text(
+                            Text(
                               'Batarya',
                               style: TextStyle(fontWeight: FontWeight.w700),
                             ),
@@ -703,7 +702,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                               _batteryArmController,
                               allowZero: true,
                             ),
-                            const Text(
+                            Text(
                               'Gövde',
                               style: TextStyle(fontWeight: FontWeight.w700),
                             ),
@@ -718,7 +717,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                               _airframeArmController,
                               allowZero: true,
                             ),
-                            const Text(
+                            Text(
                               'Faydalı Yük',
                               style: TextStyle(fontWeight: FontWeight.w700),
                             ),
@@ -742,7 +741,7 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Bu girdiler sabit kanat ve kanatlı VTOL '
                               'araçların stall, manevra ve maksimum hız '
                               'sınırlarını belirlemek için kullanılır.',
@@ -960,13 +959,15 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                               },
                             ),
                             const SizedBox(height: 8),
-                            const Align(
+                            Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 'Not: Atmosfer basıncı, seçilen irtifaya göre ISA modeliyle otomatik hesaplanır.',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Color(0xFF627D98),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -981,8 +982,8 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                         height: 56,
                         child: FilledButton.icon(
                           onPressed: _isSavingAnalysis ? null : _startAnalysis,
-                          icon: const Icon(Icons.analytics),
-                          label: const Text(
+                          icon: Icon(Icons.analytics),
+                          label: Text(
                             'Analizi Başlat',
                             style: TextStyle(fontSize: 16),
                           ),

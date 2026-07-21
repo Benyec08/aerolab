@@ -497,7 +497,10 @@ class _HangarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -505,13 +508,18 @@ class _HangarHeader extends StatelessWidget {
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF102A43),
+            color: isDark ? Colors.white : const Color(0xFF102A43),
           ),
         ),
-        SizedBox(height: 7),
+        const SizedBox(height: 7),
         Text(
           'Hava araçlarınızı yönetin, filtreleyin ve analiz için hazırlayın.',
-          style: TextStyle(fontSize: 15, color: Color(0xFF627D98)),
+          style: TextStyle(
+            fontSize: 15,
+            color: isDark
+                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.95)
+                : const Color(0xFF627D98),
+          ),
         ),
       ],
     );
@@ -572,12 +580,17 @@ class _HangarStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F4F8),
+        color: isDark ? const Color(0xFF1D2A3D) : const Color(0xFFF0F4F8),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFD9E2EC)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF52657D) : const Color(0xFFD9E2EC),
+        ),
       ),
       child: Row(
         children: [
@@ -585,10 +598,15 @@ class _HangarStatCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF0B3D91).withValues(alpha: 0.10),
+              color: isDark
+                  ? colorScheme.primary.withValues(alpha: 0.22)
+                  : const Color(0xFF0B3D91).withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: const Color(0xFF0B3D91)),
+            child: Icon(
+              icon,
+              color: isDark ? const Color(0xFF9DCAFF) : const Color(0xFF0B3D91),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -597,17 +615,21 @@ class _HangarStatCard extends StatelessWidget {
               children: [
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 23,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF102A43),
+                    color: isDark ? Colors.white : const Color(0xFF102A43),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   title,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Color(0xFF627D98)),
+                  style: TextStyle(
+                    color: isDark
+                        ? colorScheme.onSurfaceVariant.withValues(alpha: 0.95)
+                        : const Color(0xFF627D98),
+                  ),
                 ),
               ],
             ),
@@ -643,6 +665,8 @@ class _AircraftCardState extends State<_AircraftCard> {
   @override
   Widget build(BuildContext context) {
     final aircraft = widget.aircraft;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return MouseRegion(
       onEnter: (_) {
@@ -674,13 +698,18 @@ class _AircraftCardState extends State<_AircraftCard> {
           child: Card(
             elevation: 0,
             margin: EdgeInsets.zero,
+            color: isDark ? const Color(0xFF1D2A3D) : null,
             clipBehavior: Clip.antiAlias,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(
                 color: _isHovered
-                    ? const Color(0xFF0B3D91)
-                    : const Color(0xFFD9E2EC),
+                    ? (isDark
+                          ? const Color(0xFF7DB9FF)
+                          : const Color(0xFF0B3D91))
+                    : (isDark
+                          ? const Color(0xFF52657D)
+                          : const Color(0xFFD9E2EC)),
               ),
             ),
             child: Padding(
@@ -695,17 +724,21 @@ class _AircraftCardState extends State<_AircraftCard> {
                           aircraft.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF102A43),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF102A43),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(
+                      Icon(
                         Icons.flight_takeoff,
-                        color: Color(0xFF0B3D91),
+                        color: isDark
+                            ? const Color(0xFF9DCAFF)
+                            : const Color(0xFF0B3D91),
                       ),
                     ],
                   ),
@@ -716,13 +749,17 @@ class _AircraftCardState extends State<_AircraftCard> {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0B3D91).withValues(alpha: 0.09),
+                      color: isDark
+                          ? colorScheme.primary.withValues(alpha: 0.20)
+                          : const Color(0xFF0B3D91).withValues(alpha: 0.09),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       aircraft.type,
-                      style: const TextStyle(
-                        color: Color(0xFF0B3D91),
+                      style: TextStyle(
+                        color: isDark
+                            ? const Color(0xFFB9DAFF)
+                            : const Color(0xFF0B3D91),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -837,6 +874,9 @@ class _AircraftInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 7),
       child: Row(
@@ -844,7 +884,11 @@ class _AircraftInfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: Color(0xFF627D98)),
+              style: TextStyle(
+                color: isDark
+                    ? colorScheme.onSurfaceVariant.withValues(alpha: 0.95)
+                    : const Color(0xFF627D98),
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -853,9 +897,9 @@ class _AircraftInfoRow extends StatelessWidget {
               value,
               textAlign: TextAlign.end,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF243B53),
+                color: isDark ? Colors.white : const Color(0xFF243B53),
               ),
             ),
           ),
@@ -878,6 +922,9 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 430),
@@ -893,10 +940,10 @@ class _EmptyState extends StatelessWidget {
             Text(
               hasAircraft ? 'Araç Bulunamadı' : 'Henüz Kayıtlı Araç Yok',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 23,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF102A43),
+                color: isDark ? Colors.white : const Color(0xFF102A43),
               ),
             ),
             const SizedBox(height: 9),
@@ -905,7 +952,12 @@ class _EmptyState extends StatelessWidget {
                   ? 'Arama veya filtreleme ölçütlerine uygun bir araç bulunamadı.'
                   : 'İlk mühendislik aracınızı oluşturarak kütüphanenizi hazırlayın.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF627D98), height: 1.4),
+              style: TextStyle(
+                color: isDark
+                    ? colorScheme.onSurfaceVariant.withValues(alpha: 0.95)
+                    : const Color(0xFF627D98),
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 20),
             if (hasAircraft)

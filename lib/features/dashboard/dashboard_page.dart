@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:hive_ce/hive_ce.dart';
+
+import '../../data/entities/aircraft_entity.dart';
+import '../../data/hive/hive_boxes.dart';
 
 import '../../data/services/analysis_history_service.dart';
 import '../analysis/new_analysis_page.dart';
 import '../history/analysis_history_page.dart';
 import '../reports/reports_page.dart';
+import '../settings/settings_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -19,6 +24,8 @@ class _DashboardPageState extends State<DashboardPage>
   late final Animation<Offset> _slideAnimation;
   final AnalysisHistoryService _historyService = AnalysisHistoryService();
   int _analysisCount = 0;
+  int _registeredAircraftCount = 0;
+  int _riskyAnalysisCount = 0;
 
   @override
   void initState() {
@@ -40,31 +47,67 @@ class _DashboardPageState extends State<DashboardPage>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
-    _refreshAnalysisCount();
+    _refreshDashboardStats();
   }
 
-  void _refreshAnalysisCount() {
+  void _refreshDashboardStats() {
     if (!mounted) {
       return;
     }
 
-    try {
-      final analysisCount = _historyService.analysisCount;
+    var analysisCount = 0;
+    var registeredAircraftCount = 0;
+    var riskyAnalysisCount = 0;
 
-      setState(() {
-        _analysisCount = analysisCount;
-      });
-    } on StateError {
-      setState(() {
-        _analysisCount = 0;
-      });
+    if (Hive.isBoxOpen(HiveBoxes.analysisHistory)) {
+      try {
+        final analyses = _historyService.getAllAnalyses();
+        analysisCount = analyses.length;
+
+        for (final analysis in analyses) {
+          try {
+            final result = _historyService.restoreResult(analysis);
+
+            if (result.riskScore < 60) {
+              riskyAnalysisCount++;
+            }
+          } catch (_) {
+            // Bozuk veya eski bir kayıt diğer istatistiklerin yüklenmesini engellemez.
+          }
+        }
+      } catch (_) {
+        analysisCount = 0;
+        riskyAnalysisCount = 0;
+      }
     }
+
+    if (Hive.isBoxOpen(HiveBoxes.aircraft)) {
+      try {
+        registeredAircraftCount = Hive.box<AircraftEntity>(
+          HiveBoxes.aircraft,
+        ).length;
+      } catch (_) {
+        registeredAircraftCount = 0;
+      }
+    }
+
+    setState(() {
+      _analysisCount = analysisCount;
+      _registeredAircraftCount = registeredAircraftCount;
+      _riskyAnalysisCount = riskyAnalysisCount;
+    });
   }
 
   Future<void> _openPage(Widget page) async {
     await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
 
-    _refreshAnalysisCount();
+    _refreshDashboardStats();
+  }
+
+  Future<void> _openAircraftHangar() async {
+    await Navigator.pushNamed(context, '/hangar');
+
+    _refreshDashboardStats();
   }
 
   @override
@@ -120,7 +163,11 @@ class _DashboardPageState extends State<DashboardPage>
                           const SizedBox(height: 32),
                           const _HeroPanel(),
                           const SizedBox(height: 20),
-                          _StatsRow(analysisCount: _analysisCount),
+                          _StatsRow(
+                            analysisCount: _analysisCount,
+                            registeredAircraftCount: _registeredAircraftCount,
+                            riskyAnalysisCount: _riskyAnalysisCount,
+                          ),
                           const SizedBox(height: 24),
                           GridView.builder(
                             itemCount: menuItems.length,
@@ -145,7 +192,7 @@ class _DashboardPageState extends State<DashboardPage>
                                       break;
 
                                     case 'Araç Kütüphanesi':
-                                      Navigator.pushNamed(context, '/hangar');
+                                      _openAircraftHangar();
                                       break;
 
                                     case 'Analiz Geçmişi':
@@ -154,6 +201,10 @@ class _DashboardPageState extends State<DashboardPage>
 
                                     case 'Raporlar':
                                       _openPage(const ReportsPage());
+                                      break;
+
+                                    case 'Ayarlar':
+                                      _openPage(const SettingsPage());
                                       break;
 
                                     default:
@@ -338,8 +389,14 @@ class _HeroPanel extends StatelessWidget {
 
 class _StatsRow extends StatelessWidget {
   final int analysisCount;
+  final int registeredAircraftCount;
+  final int riskyAnalysisCount;
 
-  const _StatsRow({required this.analysisCount});
+  const _StatsRow({
+    required this.analysisCount,
+    required this.registeredAircraftCount,
+    required this.riskyAnalysisCount,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -369,11 +426,17 @@ class _StatsRow extends StatelessWidget {
             ),
             SizedBox(
               width: cardWidth,
-              child: const _StatCard(title: 'Kayıtlı Araç', value: '0'),
+              child: _StatCard(
+                title: 'Kayıtlı Araç',
+                value: registeredAircraftCount.toString(),
+              ),
             ),
             SizedBox(
               width: cardWidth,
-              child: const _StatCard(title: 'Risk Raporu', value: '0'),
+              child: _StatCard(
+                title: 'Riskli Analiz',
+                value: riskyAnalysisCount.toString(),
+              ),
             ),
           ],
         );
@@ -436,6 +499,18 @@ class _DashboardCardState extends State<_DashboardCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    final cardColor = isDarkMode
+        ? (isHovered ? const Color(0xFF1E5BC6) : const Color(0xFF164EA6))
+        : Theme.of(context).cardColor;
+
+    final iconColor = isDarkMode ? Colors.white : const Color(0xFF0B3D91);
+    final titleColor = isDarkMode ? Colors.white : const Color(0xFF102A43);
+    final subtitleColor = isDarkMode
+        ? const Color(0xFFD9E8FF)
+        : const Color(0xFF627D98);
+
     return MouseRegion(
       onEnter: (_) {
         setState(() {
@@ -450,33 +525,34 @@ class _DashboardCardState extends State<_DashboardCard> {
       child: AnimatedScale(
         scale: isHovered ? 1.03 : 1.0,
         duration: const Duration(milliseconds: 180),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: widget.onTap,
-          child: Card(
-            elevation: isHovered ? 8 : 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-            ),
+        child: Card(
+          elevation: isHovered ? 8 : 2,
+          color: cardColor,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+            side: isDarkMode
+                ? BorderSide(color: Colors.white.withValues(alpha: 0.10))
+                : BorderSide.none,
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(22),
+            onTap: widget.onTap,
             child: Padding(
               padding: const EdgeInsets.all(22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    widget.item.icon,
-                    size: 34,
-                    color: const Color(0xFF0B3D91),
-                  ),
+                  Icon(widget.item.icon, size: 34, color: iconColor),
                   const Spacer(),
                   Text(
                     widget.item.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 19,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF102A43),
+                      color: titleColor,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -484,10 +560,7 @@ class _DashboardCardState extends State<_DashboardCard> {
                     widget.item.subtitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF627D98),
-                    ),
+                    style: TextStyle(fontSize: 13, color: subtitleColor),
                   ),
                 ],
               ),
