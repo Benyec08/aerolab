@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hive_ce/hive_ce.dart';
 
+import '../../core/constants/app_info.dart';
 import '../../data/entities/aircraft_entity.dart';
 import '../../data/hive/hive_boxes.dart';
 
 import '../../data/services/analysis_history_service.dart';
+import '../about/about_page.dart';
 import '../analysis/new_analysis_page.dart';
 import '../history/analysis_history_page.dart';
 import '../reports/reports_page.dart';
@@ -207,6 +209,10 @@ class _DashboardPageState extends State<DashboardPage>
                                       _openPage(const SettingsPage());
                                       break;
 
+                                    case 'Hakkında':
+                                      _openPage(const AboutPage());
+                                      break;
+
                                     default:
                                       ScaffoldMessenger.of(
                                         context,
@@ -226,7 +232,7 @@ class _DashboardPageState extends State<DashboardPage>
                           const Divider(height: 30),
                           const Center(
                             child: Text(
-                              'AeroLab v0.7 Alpha • Engineering Analysis Platform',
+                              '${AppInfo.fullVersion} • ${AppInfo.platformDescription}',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 13,
@@ -237,7 +243,7 @@ class _DashboardPageState extends State<DashboardPage>
                           const SizedBox(height: 6),
                           const Center(
                             child: Text(
-                              '© 2026 Yunus Emre Ceylan',
+                              '© ${AppInfo.copyrightYear} ${AppInfo.developer}',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 12,

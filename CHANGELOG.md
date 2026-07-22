@@ -955,3 +955,91 @@ All notable changes to this project will be documented in this file.
 - Saved analysis report opening verified
 - Primary engineering report sections verified
 - Real Windows report user flow verified
+
+# v0.17.2
+
+## Sprint 17C - Persistent Theme Settings & Dark Mode Support
+
+### Added
+
+- Persistent application theme settings
+- System, light and dark theme selection
+- Theme controller with live application updates
+- Hive-based theme preference storage
+- Settings page connected to the Dashboard
+- Dedicated light and dark application themes
+
+### Improved
+
+- Dashboard dark mode appearance
+- Dashboard menu card contrast and readability
+- New Analysis dark mode compatibility
+- Analysis Result dark mode compatibility
+- Analysis History dark mode compatibility
+- Reports and engineering report dark mode compatibility
+- Aircraft Library dark mode compatibility
+- Shared analysis section dark mode compatibility
+- Shared result card dark mode compatibility
+- Form field, dropdown, border and card contrast in dark mode
+- Brighter text and icon colors for dark backgrounds
+- Theme preference is preserved after restarting the application
+
+### Fixed
+
+- Dashboard analysis counter not reflecting persistent records
+- Registered aircraft counter remaining at zero
+- Risky analysis counter remaining at zero
+- Risky analysis count now uses the engineering risk score threshold
+- Dashboard widget tests failing when Hive boxes are closed
+- Dark mode pages retaining fixed light backgrounds
+- Unreadable dark text on dark cards
+- Theme-related constant expression and missing context errors
+
+### Validation
+
+- Flutter analyzer completed with no issues
+- 216 automated tests passed
+- Windows release build completed successfully
+- Persistent theme selection verified
+- Dashboard statistics verified
+- Dark mode navigation and primary pages verified
+- Application restart theme persistence verified
+
+# v0.17.3
+
+## Sprint 17D - About Page & Version Consistency
+
+### Added
+
+- About page connected to the Dashboard
+- Central application information constants
+- Application name, version and build information
+- Developer information
+- Technology stack information
+- Current AeroLab feature overview
+- Responsive About page header
+- About page widget tests
+
+### Improved
+
+- Dashboard version text now uses a single application information source
+- Dashboard platform description now matches the About page
+- Copyright information now uses shared application constants
+- About page supports both light and dark themes
+- About page layout adapts to narrow and wide windows
+
+### Fixed
+
+- Outdated Dashboard version label
+- Version mismatch between Dashboard and application metadata
+- Invalid Expanded widget usage inside a Wrap
+- About page tests not scrolling to off-screen content
+
+### Validation
+
+- Flutter analyzer completed with no issues
+- 218 automated tests passed
+- About page application information verified
+- About page primary sections verified
+- Responsive About page layout verified
+- Light and dark theme compatibility verified
