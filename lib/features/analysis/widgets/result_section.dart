@@ -14,6 +14,9 @@ class ResultSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 28),
       child: Column(
@@ -22,17 +25,25 @@ class ResultSection extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: const Color(0xFF0B3D91), size: 24),
+              Icon(
+                icon,
+                color: isDark
+                    ? const Color(0xFF8FC5FF)
+                    : const Color(0xFF0B3D91),
+                size: 24,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF123B7A),
+                    color: isDark
+                        ? colorScheme.onSurface
+                        : const Color(0xFF123B7A),
                   ),
                 ),
               ),

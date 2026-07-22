@@ -373,11 +373,26 @@ class AnalysisService {
       wingLoading: wingLoading,
       flightSpeedMs: aerodynamicAirspeedMs,
       stallSpeedMs: stallSpeed,
+      isAtmosphereWithinSupportedLimits:
+          atmosphereSystemResult.isAtmosphereWithinSupportedLimits,
+      isWindWithinSupportedLimits: windSystemResult.isWindWithinSupportedLimits,
+      hasSufficientInstalledPower: hasSufficientInstalledPower,
+      isPropulsionSystemSafe: propulsionSystemResult.status.isSafe,
+      isBatterySystemSafe: batterySystemResult.status.isSafe,
+      isStabilityApplicable: stabilityResult.isApplicable,
+      isCenterOfGravityWithinLimits:
+          stabilityResult.isCenterOfGravityWithinLimits,
+      isStaticallyStable: stabilityResult.isStaticallyStable,
+      staticMarginPercent: stabilityResult.staticMarginPercent,
+      isFlightEnvelopeApplicable: flightEnvelopeResult.isApplicable,
+      isCruiseInsideEnvelope: flightEnvelopeResult.isCruiseInsideEnvelope,
+      usesComponentDatabase: aircraft.usesComponentDatabase,
+      isComponentSelectionCompatible: componentAnalysis.isCompatible,
     );
 
     final String status = riskService.getStatus(riskScore);
 
-    final String recommendation = _recommendationService.generate(
+    final baseRecommendation = _recommendationService.generate(
       aircraftType: aircraft.type,
       hasFixedWingAerodynamics: hasFixedWingAerodynamics,
       wingLoading: wingLoading,
@@ -397,6 +412,47 @@ class AnalysisService {
       tailwindComponentMs: windSystemResult.tailwindComponentMs,
       crosswindComponentMs: windSystemResult.crosswindComponentMs,
     );
+
+    final safetyRecommendations = <String>[];
+
+    if (!hasSufficientInstalledPower) {
+      safetyRecommendations.add(
+        'Kurulu motor gücü tepe görev gücünü karşılamıyor; motor ve görev '
+        'güç gereksinimi yeniden boyutlandırılmalıdır.',
+      );
+    }
+
+    if (!propulsionSystemResult.status.isSafe) {
+      safetyRecommendations.add(
+        'İtki sistemi güvenli değil: ${propulsionSystemResult.status.label}.',
+      );
+    }
+
+    if (!batterySystemResult.status.isSafe) {
+      safetyRecommendations.add(
+        'Batarya sistemi güvenli değil: ${batterySystemResult.status.label}.',
+      );
+    }
+
+    if (stabilityResult.isApplicable &&
+        (!stabilityResult.isCenterOfGravityWithinLimits ||
+            !stabilityResult.isStaticallyStable ||
+            stabilityResult.staticMarginPercent < 5.0)) {
+      safetyRecommendations.add(stabilityResult.message);
+    }
+
+    if (flightEnvelopeResult.isApplicable &&
+        !flightEnvelopeResult.isCruiseInsideEnvelope) {
+      safetyRecommendations.add(flightEnvelopeResult.message);
+    }
+
+    if (aircraft.usesComponentDatabase && !componentAnalysis.isCompatible) {
+      safetyRecommendations.add(componentAnalysis.compatibilityMessage);
+    }
+
+    final String recommendation = safetyRecommendations.isEmpty
+        ? baseRecommendation
+        : '$baseRecommendation ${safetyRecommendations.join(' ')}';
 
     final int? aerodynamicScore = _scoreService.aerodynamicScore(
       isApplicable: hasFixedWingAerodynamics,
@@ -429,6 +485,22 @@ class AnalysisService {
       aerodynamicScore: aerodynamicScore,
       propulsionScore: propulsionScore,
       energyScore: energyScore,
+      batteryScore: batteryScoreResult.score,
+      isAtmosphereWithinSupportedLimits:
+          atmosphereSystemResult.isAtmosphereWithinSupportedLimits,
+      isWindWithinSupportedLimits: windSystemResult.isWindWithinSupportedLimits,
+      hasSufficientInstalledPower: hasSufficientInstalledPower,
+      isPropulsionSystemSafe: propulsionSystemResult.status.isSafe,
+      isBatterySystemSafe: batterySystemResult.status.isSafe,
+      isStabilityApplicable: stabilityResult.isApplicable,
+      isCenterOfGravityWithinLimits:
+          stabilityResult.isCenterOfGravityWithinLimits,
+      isStaticallyStable: stabilityResult.isStaticallyStable,
+      staticMarginPercent: stabilityResult.staticMarginPercent,
+      isFlightEnvelopeApplicable: flightEnvelopeResult.isApplicable,
+      isCruiseInsideEnvelope: flightEnvelopeResult.isCruiseInsideEnvelope,
+      usesComponentDatabase: aircraft.usesComponentDatabase,
+      isComponentSelectionCompatible: componentAnalysis.isCompatible,
     );
 
     return AnalysisResult(

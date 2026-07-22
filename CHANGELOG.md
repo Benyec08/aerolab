@@ -1043,3 +1043,67 @@ All notable changes to this project will be documented in this file.
 - About page primary sections verified
 - Responsive About page layout verified
 - Light and dark theme compatibility verified
+
+# v1.0.0
+
+## AeroLab First Stable Release
+
+### Added
+
+- Drone and fixed-wing aircraft engineering analysis
+- ISA-based atmosphere and density altitude calculations
+- Wind direction, wind severity and ground-speed analysis
+- Aerodynamic lift, drag, stall speed and efficiency calculations
+- Propulsion, thrust and installed power reserve analysis
+- Mission power and energy consumption calculations
+- Battery capacity, current, C-rate and voltage-load analysis
+- Estimated flight time, endurance and range calculations
+- Climb and glide performance calculations
+- Center of gravity and static margin analysis
+- Flight envelope and operating-speed validation
+- Engineering scores, safety status and recommendations
+- Persistent aircraft library
+- Persistent analysis history
+- In-application engineering reports
+- Dashboard with live analysis, aircraft and risky-analysis counters
+- Light, dark and system theme support
+- Persistent application settings
+- About page and centralized version information
+- Windows desktop release support
+
+### Improved
+
+- User-defined cruise speed and aerodynamic coefficients
+- Dark-mode compatibility across primary application pages
+- Dashboard statistics derived from persistent records
+- Engineering risk score integration
+- Result readability and responsive layouts
+- Analysis history and report navigation
+- Safety recommendations and critical system warnings
+
+### Fixed
+
+- Center-of-gravity violations not affecting the overall result
+- Flight-envelope violations not affecting the overall result
+- Critical battery conditions being hidden by high subsystem scores
+- Insufficient installed power not affecting engineering status
+- Risky-analysis counter remaining unchanged
+- Registered-aircraft counter remaining at zero
+- Cruise speed being fixed to a default value
+- Closed Hive boxes causing widget-test failures
+- Dark-mode pages retaining light backgrounds
+- Version inconsistencies between application pages
+
+### Validation
+
+- Healthy drone scenario verified
+- Risky drone scenario verified
+- Healthy fixed-wing scenario verified
+- Risky fixed-wing scenario verified
+- Center-of-gravity safety integration verified
+- Flight-envelope safety integration verified
+- Propulsion and installed-power safety integration verified
+- Battery critical-state detection verified
+- Persistent storage and restart behavior verified
+- Light and dark theme flows verified
+- Windows release build verified

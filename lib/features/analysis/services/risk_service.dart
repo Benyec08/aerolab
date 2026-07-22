@@ -6,6 +6,19 @@ class RiskService {
     required double wingLoading,
     required double flightSpeedMs,
     required double stallSpeedMs,
+    bool isAtmosphereWithinSupportedLimits = true,
+    bool isWindWithinSupportedLimits = true,
+    bool hasSufficientInstalledPower = true,
+    bool isPropulsionSystemSafe = true,
+    bool isBatterySystemSafe = true,
+    bool isStabilityApplicable = false,
+    bool isCenterOfGravityWithinLimits = true,
+    bool isStaticallyStable = true,
+    double staticMarginPercent = 100.0,
+    bool isFlightEnvelopeApplicable = false,
+    bool isCruiseInsideEnvelope = true,
+    bool usesComponentDatabase = false,
+    bool isComponentSelectionCompatible = true,
   }) {
     int score = 100;
 
@@ -27,8 +40,50 @@ class RiskService {
       }
     }
 
+    if (!isAtmosphereWithinSupportedLimits) {
+      score -= 20;
+    }
+
+    if (!isWindWithinSupportedLimits) {
+      score -= 20;
+    }
+
+    if (!hasSufficientInstalledPower) {
+      score -= 30;
+    }
+
+    if (!isPropulsionSystemSafe) {
+      score -= 30;
+    }
+
+    if (!isBatterySystemSafe) {
+      score -= 30;
+    }
+
+    if (isStabilityApplicable) {
+      if (!isStaticallyStable) {
+        score -= 55;
+      } else if (!isCenterOfGravityWithinLimits) {
+        score -= 45;
+      } else if (staticMarginPercent < 5.0) {
+        score -= 20;
+      }
+    }
+
+    if (isFlightEnvelopeApplicable && !isCruiseInsideEnvelope) {
+      score -= 45;
+    }
+
+    if (usesComponentDatabase && !isComponentSelectionCompatible) {
+      score -= 25;
+    }
+
     if (score < 0) {
-      score = 0;
+      return 0;
+    }
+
+    if (score > 100) {
+      return 100;
     }
 
     return score;

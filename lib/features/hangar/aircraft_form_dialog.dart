@@ -32,6 +32,10 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
   late final TextEditingController _weightController;
   late final TextEditingController _wingAreaController;
   late final TextEditingController _wingSpanController;
+  late final TextEditingController _cruiseSpeedController;
+  late final TextEditingController _zeroLiftDragCoefficientController;
+  late final TextEditingController _maxLiftCoefficientController;
+  late final TextEditingController _oswaldEfficiencyController;
 
   // Motor sistemi
   late final TextEditingController _motorCountController;
@@ -127,6 +131,22 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
 
     _wingSpanController = TextEditingController(
       text: aircraft?['wingSpan']?.toString() ?? '',
+    );
+
+    _cruiseSpeedController = TextEditingController(
+      text: aircraft?['cruiseSpeedMs']?.toString() ?? '15',
+    );
+    _zeroLiftDragCoefficientController = TextEditingController(
+      text: aircraft?['zeroLiftDragCoefficient']?.toString() ?? '0.030',
+    );
+    _maxLiftCoefficientController = TextEditingController(
+      text: aircraft?['maxLiftCoefficient']?.toString() ?? '1.4',
+    );
+    _oswaldEfficiencyController = TextEditingController(
+      text: _efficiencyAsPercent(
+        aircraft?['oswaldEfficiencyFactor'],
+        fallback: 0.80,
+      ),
     );
 
     _motorCountController = TextEditingController(
@@ -264,6 +284,10 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
     _weightController.dispose();
     _wingAreaController.dispose();
     _wingSpanController.dispose();
+    _cruiseSpeedController.dispose();
+    _zeroLiftDragCoefficientController.dispose();
+    _maxLiftCoefficientController.dispose();
+    _oswaldEfficiencyController.dispose();
     _motorCountController.dispose();
     _motorPowerController.dispose();
     _escEfficiencyController.dispose();
@@ -642,6 +666,12 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
       'weight': _parseDouble(_weightController),
       'wingArea': _parseDouble(_wingAreaController),
       'wingSpan': _parseDouble(_wingSpanController),
+      'cruiseSpeedMs': _parseDouble(_cruiseSpeedController),
+      'zeroLiftDragCoefficient': _parseDouble(
+        _zeroLiftDragCoefficientController,
+      ),
+      'maxLiftCoefficient': _parseDouble(_maxLiftCoefficientController),
+      'oswaldEfficiencyFactor': _parseEfficiency(_oswaldEfficiencyController),
       'motorCount': _parseInt(_motorCountController),
       'motorPower': _parseDouble(_motorPowerController),
       'escEfficiency': _parseEfficiency(_escEfficiencyController),
@@ -715,6 +745,13 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
                       ),
                       const SizedBox(height: 16),
                       _buildPhysicalProperties(),
+                      const SizedBox(height: 26),
+                      _buildSectionTitle(
+                        icon: Icons.air_outlined,
+                        title: 'Aerodinamik Performans',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildAerodynamicPerformance(),
                       const SizedBox(height: 26),
                       _buildSectionTitle(
                         icon: Icons.balance_outlined,
@@ -882,6 +919,101 @@ class _AircraftFormDialogState extends State<AircraftFormDialog> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildAerodynamicPerformance() {
+    final isWingedAircraft =
+        _selectedType == 'Sabit Kanat' || _selectedType == 'VTOL';
+
+    final cd0Field = TextFormField(
+      controller: _zeroLiftDragCoefficientController,
+      enabled: isWingedAircraft,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textInputAction: TextInputAction.next,
+      decoration: _inputDecoration(
+        label: 'Sıfır Kaldırma Sürükleme Katsayısı (Cd0)',
+        hint: '0.030',
+        icon: Icons.air_outlined,
+      ),
+      validator: (value) => _validatePositiveNumber(value, 'Cd0'),
+    );
+
+    final clMaxField = TextFormField(
+      controller: _maxLiftCoefficientController,
+      enabled: isWingedAircraft,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textInputAction: TextInputAction.next,
+      decoration: _inputDecoration(
+        label: 'Maksimum Kaldırma Katsayısı (CLmax)',
+        hint: '1.4',
+        icon: Icons.flight_outlined,
+      ),
+      validator: (value) => _validatePositiveNumber(value, 'CLmax'),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: _cruiseSpeedController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.next,
+          decoration: _inputDecoration(
+            label: 'Seyir Hızı',
+            hint: '18',
+            icon: Icons.speed_outlined,
+            suffixText: 'm/s',
+          ),
+          validator: (value) => _validatePositiveNumber(value, 'Seyir hızı'),
+        ),
+        const SizedBox(height: 16),
+        if (!isWingedAircraft)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'Aerodinamik katsayılar drone ve helikopter analizlerinde '
+              'kullanılmaz; kayıt tutarlılığı için varsayılan değerlerle '
+              'saklanır.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 500) {
+              return Column(
+                children: [cd0Field, const SizedBox(height: 16), clMaxField],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: cd0Field),
+                const SizedBox(width: 16),
+                Expanded(child: clMaxField),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _oswaldEfficiencyController,
+          enabled: isWingedAircraft,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.next,
+          decoration: _inputDecoration(
+            label: 'Oswald Verimlilik Faktörü',
+            hint: '80',
+            icon: Icons.percent_outlined,
+            suffixText: '%',
+          ),
+          validator: (value) =>
+              _validateEfficiencyPercent(value, 'Oswald verimlilik faktörü'),
+        ),
+      ],
     );
   }
 

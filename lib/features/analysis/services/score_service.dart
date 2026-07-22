@@ -90,16 +90,67 @@ class ScoreService {
     required int? aerodynamicScore,
     required int propulsionScore,
     required int energyScore,
+    int? batteryScore,
+    bool isAtmosphereWithinSupportedLimits = true,
+    bool isWindWithinSupportedLimits = true,
+    bool hasSufficientInstalledPower = true,
+    bool isPropulsionSystemSafe = true,
+    bool isBatterySystemSafe = true,
+    bool isStabilityApplicable = false,
+    bool isCenterOfGravityWithinLimits = true,
+    bool isStaticallyStable = true,
+    double staticMarginPercent = 100.0,
+    bool isFlightEnvelopeApplicable = false,
+    bool isCruiseInsideEnvelope = true,
+    bool usesComponentDatabase = false,
+    bool isComponentSelectionCompatible = true,
   }) {
     final applicableScores = <int>[
       propulsionScore,
       energyScore,
       ?aerodynamicScore,
+      ?batteryScore,
     ];
 
     final total = applicableScores.fold<int>(0, (sum, score) => sum + score);
+    var score = (total / applicableScores.length).round();
+    var safetyCap = 100;
 
-    return (total / applicableScores.length).round();
+    if (!isAtmosphereWithinSupportedLimits || !isWindWithinSupportedLimits) {
+      safetyCap = safetyCap < 55 ? safetyCap : 55;
+    }
+
+    if (!hasSufficientInstalledPower || !isPropulsionSystemSafe) {
+      safetyCap = safetyCap < 45 ? safetyCap : 45;
+    }
+
+    if (!isBatterySystemSafe) {
+      safetyCap = safetyCap < 45 ? safetyCap : 45;
+    }
+
+    if (isStabilityApplicable) {
+      if (!isStaticallyStable) {
+        safetyCap = safetyCap < 40 ? safetyCap : 40;
+      } else if (!isCenterOfGravityWithinLimits) {
+        safetyCap = safetyCap < 55 ? safetyCap : 55;
+      } else if (staticMarginPercent < 5.0) {
+        safetyCap = safetyCap < 75 ? safetyCap : 75;
+      }
+    }
+
+    if (isFlightEnvelopeApplicable && !isCruiseInsideEnvelope) {
+      safetyCap = safetyCap < 55 ? safetyCap : 55;
+    }
+
+    if (usesComponentDatabase && !isComponentSelectionCompatible) {
+      safetyCap = safetyCap < 55 ? safetyCap : 55;
+    }
+
+    if (score > safetyCap) {
+      score = safetyCap;
+    }
+
+    return _clamp(score);
   }
 
   int _atmospherePenalty({

@@ -13,7 +13,6 @@ class AnalysisResultPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
       appBar: AppBar(
         title: const Text('Analiz Sonucu'),
         backgroundColor: Colors.transparent,
@@ -26,7 +25,7 @@ class AnalysisResultPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
+                _buildHeader(context),
                 const SizedBox(height: 24),
                 _buildRiskCard(),
                 const SizedBox(height: 28),
@@ -85,23 +84,25 @@ class AnalysisResultPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Uçuş Analiz Raporu',
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF102A43),
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           '${result.aircraftType} için uygulanabilir performans, '
           'enerji ve güvenlik metrikleri',
-          style: const TextStyle(fontSize: 15, color: Color(0xFF627D98)),
+          style: TextStyle(fontSize: 15, color: colorScheme.onSurfaceVariant),
         ),
       ],
     );

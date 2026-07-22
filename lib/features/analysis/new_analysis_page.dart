@@ -30,6 +30,10 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
   late final TextEditingController _weightController;
   late final TextEditingController _wingAreaController;
   late final TextEditingController _wingSpanController;
+  late final TextEditingController _cruiseSpeedController;
+  late final TextEditingController _zeroLiftDragCoefficientController;
+  late final TextEditingController _maxLiftCoefficientController;
+  late final TextEditingController _oswaldEfficiencyController;
   late final TextEditingController _motorPowerController;
   late final TextEditingController _motorCountController;
   late final TextEditingController _escEfficiencyController;
@@ -96,6 +100,20 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     );
     _wingSpanController = TextEditingController(
       text: aircraft?.wingSpanM.toString() ?? '1.2',
+    );
+    _cruiseSpeedController = TextEditingController(
+      text: aircraft?.cruiseSpeedMs.toString() ?? '15',
+    );
+    _zeroLiftDragCoefficientController = TextEditingController(
+      text: aircraft?.zeroLiftDragCoefficient.toString() ?? '0.030',
+    );
+    _maxLiftCoefficientController = TextEditingController(
+      text: aircraft?.maxLiftCoefficient.toString() ?? '1.4',
+    );
+    _oswaldEfficiencyController = TextEditingController(
+      text: ((aircraft?.oswaldEfficiencyFactor ?? 0.80) * 100).toStringAsFixed(
+        0,
+      ),
     );
     _motorPowerController = TextEditingController(
       text: aircraft?.motorPowerW.toString() ?? '850',
@@ -224,6 +242,10 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
     _weightController.dispose();
     _wingAreaController.dispose();
     _wingSpanController.dispose();
+    _cruiseSpeedController.dispose();
+    _zeroLiftDragCoefficientController.dispose();
+    _maxLiftCoefficientController.dispose();
+    _oswaldEfficiencyController.dispose();
     _motorPowerController.dispose();
     _motorCountController.dispose();
     _escEfficiencyController.dispose();
@@ -425,6 +447,10 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
       weightKg: _toDouble(_weightController),
       wingAreaM2: _toDouble(_wingAreaController),
       wingSpanM: _toDouble(_wingSpanController),
+      cruiseSpeedMs: _toDouble(_cruiseSpeedController),
+      zeroLiftDragCoefficient: _toDouble(_zeroLiftDragCoefficientController),
+      maxLiftCoefficient: _toDouble(_maxLiftCoefficientController),
+      oswaldEfficiencyFactor: _toEfficiency(_oswaldEfficiencyController),
       motorCount: _toDouble(_motorCountController).toInt(),
       motorPowerW: _toDouble(_motorPowerController),
       escEfficiency: _toEfficiency(_escEfficiencyController),
@@ -625,6 +651,50 @@ class _NewAnalysisPageState extends State<NewAnalysisPage> {
                               'Kanat Açıklığı (m)',
                               _wingSpanController,
                               allowZero: true,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      AnalysisSection(
+                        title: 'Aerodinamik Performans',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildTextField(
+                              'Seyir Hızı (m/s)',
+                              _cruiseSpeedController,
+                              minimumValue: 0.1,
+                            ),
+                            if (_selectedAircraftType == 'Drone')
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 18),
+                                child: Text(
+                                  'Aerodinamik katsayılar drone analizinde '
+                                  'kullanılmaz. Seyir hızı; rüzgâr, görev ve '
+                                  'menzil hesaplarında kullanılır.',
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            _buildTextField(
+                              'Sıfır Kaldırma Sürükleme Katsayısı (Cd0)',
+                              _zeroLiftDragCoefficientController,
+                              minimumValue: 0.001,
+                            ),
+                            _buildTextField(
+                              'Maksimum Kaldırma Katsayısı (CLmax)',
+                              _maxLiftCoefficientController,
+                              minimumValue: 0.1,
+                            ),
+                            _buildTextField(
+                              'Oswald Verimlilik Faktörü (%)',
+                              _oswaldEfficiencyController,
+                              minimumValue: 0.1,
+                              maximumValue: 100,
                             ),
                           ],
                         ),
